@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script>
+      // ページがロードされた時にデフォルトの日付を設定
+      window.onload = function() {
+        let fixedStartDate = "2025-01-10"; // 固定の開始日
+        let fixedEndDate = "2025-01-11";   // 固定の終了日
+
+        document.getElementById("start-date").value = fixedStartDate;
+        document.getElementById("end-date").value = fixedEndDate;
+      };
+
+      function runScript() {
+        let startDate = document.getElementById("start-date").value;
+        let endDate = document.getElementById("end-date").value;
+
+        if (!startDate || !endDate) {
+          alert("開始日と終了日の両方を選択してください");
+          return;
+        }
+
+        alert(`広告データを取得中です。\n\nしばらくお待ちください。\n\n期間: ${startDate} ~ ${endDate}`);
+
+        google.script.run
+          .withSuccessHandler(() => {
+            alert(`広告データの取得が完了しました。「広告」シートをご確認ください。期間: ${startDate} ~ ${endDate}`);
+          })
+          .withFailureHandler((error) => {
+            alert(`エラーが発生しました: ${error.message}`);
+          })
+          .facebook_getAds(startDate, endDate);
+      }
+    </script>
+  </head>
+  <body>
+    <h3>Facebook広告データ取得</h3>
+    <label>開始日: </label>
+    <input type="date" id="start-date"><br><br>
+
+    <label>終了日: </label>
+    <input type="date" id="end-date"><br><br>
+
+    <button onclick="runScript()">データ取得</button>
+  </body>
+</html>
