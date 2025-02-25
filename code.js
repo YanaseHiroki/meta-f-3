@@ -270,7 +270,9 @@ function makeOperationReport() {
   }
 
   // シート情報の読み込み
-  const adSetData = adSetSheet.getRange(2, 1, adSetSheet.getLastRow() - 1, adSetSheet.getLastColumn()).getValues();
+  const lastRow = adSetSheet.getLastRow();
+  const lastColumn = adSetSheet.getLastColumn();
+  const adSetData = lastRow > 1 ?adSetSheet.getRange(2, 1, lastRow - 1, lastColumn).getValues() : [];
   const adSetMap = {};
 
   // 広告セットの情報を合算
@@ -439,7 +441,6 @@ function makeOperationReport() {
 
 // スプレッドシートからアクセストークンを取得する関数
 function facebook_getAccessToken() {
-  console.log("facebook_getAccessToken()");
 
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('トークン管理');
   if (sheet) {
@@ -639,7 +640,6 @@ function getFacebookAdsDataForCampaign(campaignId, fields, argDaySince, argDayUn
 
   // 完全なURLを構築
   var urlWithParams = apiUrl + "?" + queryString;
-  console.log(`urlWithParams in getFacebookAdsDataForCampaign: ${urlWithParams}`);
 
   // APIリクエスト用オプションの設定
   var options = {
