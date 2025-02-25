@@ -46,6 +46,27 @@ function facebook_getAdSets(daySince, dayUntil) {
   SpreadsheetApp.getUi().alert(sheetName + "情報を取得して運用レポートを作成しました。");
 }
 
+// 指定された期間の1日ごとに facebook_getAdSets 関数を呼び出して運用レポートに追記
+// 引数：開始日, 終了日
+function getAdSetsAndMakeOperationReport(daySince, dayUntil) {
+  console.log(`getAdSetsAndMakeOperationReport(${daySince}, ${dayUntil})`);
+
+  var currentDate = new Date(daySince);
+  var endDate = new Date(dayUntil);
+
+  while (currentDate <= endDate) {
+    var formattedDate = Utilities.formatDate(currentDate, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+    console.log(`Processing date: ${formattedDate}`);
+
+    // 1日分の広告セットを取得して運用レポートに追記
+    facebook_getAdSets(formattedDate, formattedDate);
+
+    // 次の日に進む
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  console.log("getAdSetsAndMakeOperationReport 完了");
+}
 // 前日の広告セット情報を取得する関数（定期実行用）
 function facebook_getAdSetsForYesterday() {
   console.log("facebook_getAdSetsForYesterday()");
