@@ -36,14 +36,13 @@ function facebook_getAdSets(daySince, dayUntil) {
   refreshAccessToken();
 
   // 広告セットを取得
-  facebook_writeFacebookAdsDataToSheet(sheetName, endpoint, fields, daySince, dayUntil);
+  var adSetsCount = facebook_writeFacebookAdsDataToSheet(sheetName, endpoint, fields, daySince, dayUntil);
 
   // 運用レポートに追記
   makeOperationReport();
 
   // メッセージを表示
   console.log(sheetName + "情報 取得完了");
-  SpreadsheetApp.getUi().alert(sheetName + "情報を取得して運用レポートを作成しました。");
 }
 
 // 指定された期間の1日ごとに facebook_getAdSets 関数を呼び出して運用レポートに追記
@@ -55,9 +54,28 @@ function getAdSetsAndMakeOperationReport(daySince, dayUntil) {
   var currentDate = new Date(daySince);
   var endDate = new Date(dayUntil);
 
+  // 運用レポートに記入済みの日付のリスト
+  var operationReportSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('運用レポート');
+  var operationReportData = operationReportSheet.getRange("B23:B" + operationReportSheet.getLastRow()).getValues();
+  var operationReportDates = operationReportData.map(row => {
+    if (row[0] instanceof Date) {
+      return Utilities.formatDate(row[0], Session.getScriptTimeZone(), 'yyyy-MM-dd');
+    }
+    return row[0];
+  });
+  console.log(`operationReportDates: ${operationReportDates.join(',')}`);
+  
   while (currentDate <= endDate) {
     var formattedDate = Utilities.formatDate(currentDate, Session.getScriptTimeZone(), 'yyyy-MM-dd');
     console.log(`Processing date: ${formattedDate}`);
+
+    // すでに運用レポートに記入済みの日付の場合はスキップ
+    if (operationReportDates.includes(formattedDate)) {
+      console.log(`${formattedDate}はすでに運用レポートに記入済みです。`);
+      SpreadsheetApp.getActiveSpreadsheet().toast(`${formattedDate}は運用レポートに記入済みです。`, "運用レポート記入", 5);
+      currentDate.setDate(currentDate.getDate() + 1);
+      continue;
+    }
 
     // 1日分の広告セットを取得して運用レポートに追記
     facebook_getAdSets(formattedDate, formattedDate);
@@ -67,7 +85,9 @@ function getAdSetsAndMakeOperationReport(daySince, dayUntil) {
   }
 
   console.log("getAdSetsAndMakeOperationReport 完了");
+  SpreadsheetApp.getUi().alert("広告セット情報を取得して運用レポートを作成しました。");
 }
+
 // 前日の広告セット情報を取得する関数（定期実行用）
 function facebook_getAdSetsForYesterday() {
   console.log("facebook_getAdSetsForYesterday()");
@@ -272,7 +292,9 @@ function makeOperationReport() {
   // シート情報の読み込み
   const lastRow = adSetSheet.getLastRow();
   const lastColumn = adSetSheet.getLastColumn();
-  const adSetData = lastRow > 1 ?adSetSheet.getRange(2, 1, lastRow - 1, lastColumn).getValues() : [];
+  const adSetData = lastRow > 1 ? adSetSheet.getRange(2, 1, lastRow - 1, lastColumn).getValues() : [];
+  let noDataDate = lastRow === 1 ? adSetSheet.getRange(1, 3).getValue() : '';
+  noDataDate = noDataDate ? Utilities.formatDate(noDataDate, Session.getScriptTimeZone(), 'yyyy-MM-dd') : '';
   const adSetMap = {};
 
   // 広告セットの情報を合算
@@ -285,7 +307,7 @@ function makeOperationReport() {
         cpc: 0,
         spend: 0,
         conversions: 0,
-        date_stop: date_stop
+        date_stop: Utilities.formatDate(date_stop, Session.getScriptTimeZone(), 'yyyy-MM-dd')
       };
     }
     adSetMap[adset_name].impressions += parseFloat(impressions) || 0;
@@ -359,9 +381,13 @@ function makeOperationReport() {
     }
   }
 
+  operationReportSheet.insertRowBefore(existingRow);
+
   if (adSetData.length === 0) {
-    // 広告セットシートのデータが0行の場合、B列に日付だけ記入
-    operationReportSheet.getRange(existingRow, 2).setValue(dateStop);
+    // 広告セットシートのデータが0行の場合、最終行の次に1列挿入してB列に日付を記入
+    if (noDataDate) {
+      operationReportSheet.getRange(existingRow, 2).setValue(noDataDate);
+    }
   } else {
     // 全広告セットの合計値をC列からM列に入れる
     operationReportSheet.getRange(existingRow, 2, 1, totalRow.length).setValues([totalRow]);
@@ -406,7 +432,10 @@ function makeOperationReport() {
       }
 
       // 広告セット名をN21, Y21, AJ21などに設定
-      operationReportSheet.getRange(21, colIndex).setValue(adset_name);
+      const adSetNameRange = operationReportSheet.getRange(21, colIndex, 1, 11);
+      adSetNameRange.merge();
+      adSetNameRange.setValue(adset_name);
+      adSetNameRange.setBackground('#ADD8E6'); // 水色背景
 
       // C22:M22をN22:X22, Y22:AI22, AJ22:AT22などにコピー
       const headerRange = operationReportSheet.getRange(22, 3, 1, 11);
@@ -428,9 +457,22 @@ function makeOperationReport() {
       operationReportSheet.getRange(existingRow, colIndex + 9).setNumberFormat('0.00%'); // 実CVR
       operationReportSheet.getRange(existingRow, colIndex + 10).setNumberFormat('"¥"#,##0'); // 実CPA
 
+      // 罫線を引く
+      const adSetRange = operationReportSheet.getRange(23, 2, existingRow - 22, colIndex + 9);
+      adSetRange.setBorder(true, true, true, true, true, true);
+
+      // 背景色を設定
+      adSetRange.setBackground('#FFFFFF'); // 白色
+      operationReportSheet.getRange(existingRow, colIndex + 7, 1, 1).setBackgroundRGB(252, 228, 214); // 媒体CPA
+      operationReportSheet.getRange(existingRow, colIndex + 10, 1, 1).setBackgroundRGB(252, 228, 214); // 実CPA
+
       colIndex += 11; // 広告セット同士の間に不要な空の列がないようにする
     }
   }
+
+  // データをB列の値の昇順にソート
+  const rangeToSort = operationReportSheet.getRange(23, 2, existingRow - 22, operationReportSheet.getLastColumn());
+  rangeToSort.sort({ column: 2, ascending: true });
 
   // シートを表示
   operationReportSheet.activate();
@@ -701,7 +743,10 @@ function facebook_writeFacebookAdsDataToSheet(sheetName, endpoint, fields, daySi
 
     if (!campaigns || campaigns.length === 0) {
       Logger.log("キャンペーンデータが取得できませんでした。");
-      return;
+      sheet.getRange(1, 1).setValue("データなし");
+      sheet.getRange(1, 2).setValue(daySince);
+      sheet.getRange(1, 3).setValue(dayUntil);
+      return 0;
     }
 
     var firstCampaignData = null;
@@ -713,14 +758,20 @@ function facebook_writeFacebookAdsDataToSheet(sheetName, endpoint, fields, daySi
     }
     if (!firstCampaignData || firstCampaignData.length === 0) {
       Logger.log("ヘッダーのサンプルデータが取得できませんでした。");
-      return;
+      sheet.getRange(1, 1).setValue("データなし");
+      sheet.getRange(1, 2).setValue(daySince);
+      sheet.getRange(1, 3).setValue(dayUntil);
+      return 0;
     }
 
     var sampleAd = firstCampaignData[0];
 
     if (!sampleAd || Object.keys(sampleAd).length === 0) {
       Logger.log("ヘッダーに使用するデータが取得できませんでした。");
-      return;
+      sheet.getRange(1, 1).setValue("データなし");
+      sheet.getRange(1, 2).setValue(daySince);
+      sheet.getRange(1, 3).setValue(dayUntil);
+      return 0;
     }
 
     var header = Object.keys(sampleAd);
@@ -821,10 +872,18 @@ function facebook_writeFacebookAdsDataToSheet(sheetName, endpoint, fields, daySi
     }
 
     sheet.getRange(lastRow + 1, 1, formattedData.length, header.length).setValues(formattedData);
+  } else {
+    // データが0件の場合
+    sheet.getRange(1, 1).setValue("データなし");
+    sheet.getRange(1, 2).setValue(daySince);
+    sheet.getRange(1, 3).setValue(dayUntil);
   }
 
   // sheetNameシートを表示する
   sheet.activate();
+
+  // 書き込んだデータの件数を返却
+  return dataToWrite.length;
 }
 
 // 画像URL取得
