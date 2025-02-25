@@ -2,17 +2,11 @@
 function facebook_getCampaign(daySince, dayUntil) {
   console.log(`facebook_getCampaign(${daySince},${dayUntil})`);
 
-  if (!daySince || !dayUntil) {
-    console.log("開始日と終了日の両方を選択してください。");
-    SpreadsheetApp.getUi().alert("開始日と終了日の両方を選択してください。");
-    return;
-  }
-
   var sheetName = "キャンペーン";
   var endpoint = "campaigns";
 
   console.log(sheetName + "情報 取得開始");
-  SpreadsheetApp.getActiveSpreadsheet().toast(sheetName + "情報を取得します。しばらくお待ちください。", "キャンペーン取得", 10);
+  SpreadsheetApp.getActiveSpreadsheet().toast(sheetName + "情報を取得します。");
 
   // https://developers.facebook.com/docs/marketing-api/reference/ad-campaign-group/insights?locale=ja_JP
   var fields = "date_start,date_stop,account_id,account_name,campaign_id,campaign_name,impressions,inline_link_clicks,conversions,spend";
@@ -29,17 +23,11 @@ function facebook_getCampaign(daySince, dayUntil) {
 function facebook_getAdSets(daySince, dayUntil) {
   console.log(`facebook_getAdSets(${daySince},${dayUntil})`);
 
-  if (!daySince || !dayUntil) {
-    console.log("開始日と終了日の両方を選択してください。");
-    SpreadsheetApp.getUi().alert("開始日と終了日の両方を選択してください。");
-    return;
-  }
-
   var sheetName = "広告セット";
   var endpoint = "adsets";
 
   console.log(sheetName + "情報 取得開始");
-  SpreadsheetApp.getActiveSpreadsheet().toast(sheetName + "情報を取得します。しばらくお待ちください。", "広告セット取得", 10);
+  SpreadsheetApp.getActiveSpreadsheet().toast(sheetName + "情報を取得して運用レポートを作成します。");
 
   // https://developers.facebook.com/docs/marketing-api/reference/ad-campaign/insights?locale=ja_JP  
   var fields = "date_start,date_stop,adset_name,impressions,clicks,ctr,cpc,spend,actions";
@@ -50,19 +38,21 @@ function facebook_getAdSets(daySince, dayUntil) {
   // 広告セットを取得
   facebook_writeFacebookAdsDataToSheet(sheetName, endpoint, fields, daySince, dayUntil);
 
+  // 運用レポートに追記
+  makeOperationReport();
+
   // メッセージを表示
   console.log(sheetName + "情報 取得完了");
-  SpreadsheetApp.getUi().alert(sheetName + "情報を取得しました。");
+  SpreadsheetApp.getUi().alert(sheetName + "情報を取得して運用レポートを作成しました。");
 }
 
 // 前日の広告セット情報を取得する関数（定期実行用）
-// 引数：なし
 function facebook_getAdSetsForYesterday() {
   console.log("facebook_getAdSetsForYesterday()");
 
   var sheetName = "広告セット";
   var endpoint = "adsets";
-  console.log(sheetName + "情報取得・運用レポート追記開始(定期実行)");
+  console.log(sheetName + "情報 取得開始");
 
   // https://developers.facebook.com/docs/marketing-api/reference/ad-campaign/insights?locale=ja_JP  
   var fields = "date_start,date_stop,adset_name,impressions,clicks,ctr,cpc,spend,actions";
@@ -72,253 +62,13 @@ function facebook_getAdSetsForYesterday() {
   var dayUntil = facebook_getDateNDaysAgo(1); // 終了日
 
   refreshAccessToken();
+  facebook_writeFacebookAdsDataToSheet(sheetName, endpoint, fields, daySince, dayUntil);
 
-  // 指定された期間の広告セット情報を取得して運用レポートに書き込む
-  getAdSetsAndMakeOperationReport(daySince, dayUntil);
-
-  // メッセージを表示
-  console.log(sheetName + "情報取得・運用レポート追記完了(定期実行)");
-}
-
-// 指定された期間の広告セット情報を取得して運用レポートに書き込む関数
-// 引数：開始日、終了日
-function getAdSetsAndMakeOperationReport(daySince, dayUntil) {
-  console.log(`getAdSetsAndMakeOperationReport(${daySince}, ${dayUntil})`);
-  SpreadsheetApp.getActiveSpreadsheet().toast("広告セット情報を取得して運用レポートに記入します。しばらくお待ちください。", "運用レポート記入", 10);
-
-  if (!daySince || !dayUntil) {
-    console.log("開始日と終了日の両方を選択してください。");
-    SpreadsheetApp.getUi().alert("開始日と終了日の両方を選択してください。");
-    return;
-  }
-
-  // トークンを更新
-  refreshAccessToken();
-
-  // 運用レポートに広告セット情報を追記
-  makeOperationReportByAllData(allData);
-
-  console.log("getAdSetsAndMakeOperationReport 完了");
-}
-
-// 運用レポートに広告セット情報を追記する関数
-function makeOperationReportByAllData(allData) {
-  console.log("makeOperationReportByAllData");
-
-  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  var operationReportSheetName = '運用レポート';
-  var operationReportSheet = spreadsheet.getSheetByName(operationReportSheetName);
-
-  if (!operationReportSheet) {
-    Logger.log('シート "運用レポート" が見つかりません。');
-    return;
-  }
-
-  // 広告セットの情報を合算
-  const adSetMap = {};
-  allData.forEach(row => {
-
-    const adset_name = row.adset_name;
-    if (!adSetMap[adset_name]) {
-      adSetMap[adset_name] = {
-        impressions: 0,
-        clicks: 0,
-        ctr: 0,
-        cpc: 0,
-        spend: 0,
-        conversions: 0,
-        date_start: row.date_start,
-        date_stop: row.date_stop
-      };
-    }
-    adSetMap[adset_name].impressions += parseFloat(row.impressions) || 0;
-    adSetMap[adset_name].clicks += parseFloat(row.clicks) || 0;
-    adSetMap[adset_name].ctr += parseFloat(row.ctr) || 0;
-    adSetMap[adset_name].cpc += parseFloat(row.cpc) || 0;
-    adSetMap[adset_name].spend += parseFloat(row.spend) || 0;
-    adSetMap[adset_name].conversions += parseFloat(row.actions.find(action => action.action_type === 'offsite_conversion.fb_pixel_purchase')?.value) || 0;
-  });
-
-  // 合計値を計算
-  let totalImpressions = 0;
-  let totalClicks = 0;
-  let totalCtr = 0;
-  let totalCpc = 0;
-  let totalSpend = 0;
-  let totalConversions = 0;
-  let dateStop = '';
-
-  for (const adset_name in adSetMap) {
-    const adSet = adSetMap[adset_name];
-    totalImpressions += adSet.impressions;
-    totalClicks += adSet.clicks;
-    totalSpend += adSet.spend;
-    totalConversions += adSet.conversions;
-    if (!dateStop) {
-      dateStop = adSet.date_stop;
-    }
-  }
-
-  // 全広告セットのCTRを計算
-  totalCtr = totalImpressions ? (totalClicks / totalImpressions) : 0;
-
-  const totalRow = [
-    dateStop,
-    totalImpressions,
-    totalClicks,
-    totalCtr,
-    totalCpc,
-    totalSpend,
-    totalConversions,
-    totalClicks ? totalConversions / totalClicks : 0, // 媒体CVR
-    totalConversions ? totalSpend / totalConversions : 0, // 媒体CPA
-    0, // 実CV
-    0, // 実CVR
-    0  // 実CPA
-  ];
-
-  // 運用レポートシートのデータを取得
-  const operationReportData = operationReportSheet.getDataRange().getValues();
-  let startRow = 23;
-    
-  // 運用レポートのB23以下に同じ日付の行があれば削除する
-  const dateStopRange = operationReportSheet.getRange('B23:B');
-  const dateStopValues = dateStopRange.getValues();
-  for (let i = 0; i < dateStopValues.length; i++) {
-    if (dateStopValues[i][0] === dateStop) {
-      operationReportSheet.deleteRow(i + 23);
-      break;
-    }
-  }
-
-  if (existingRow === -1) {
-    // 新しい行にデータを追加
-    for (let i = startRow - 1; i < operationReportData.length; i++) {
-      if (!operationReportData[i][1]) {
-        existingRow = i + 1;
-        break;
-      }
-    }
-    if (existingRow === -1) {
-      existingRow = operationReportData.length + 1;
-    }
-  }
-
-  // 最終行の次に1行挿入
-  operationReportSheet.insertRowAfter(existingRow);
-
-  // 全広告セットの合計値をC列からM列に入れる
-  operationReportSheet.getRange(existingRow, 2, 1, totalRow.length).setValues([totalRow]);
-
-  // 各項目の形式を指定
-  operationReportSheet.getRange(existingRow, 3).setNumberFormat('#,##0'); // impressions
-  operationReportSheet.getRange(existingRow, 4).setNumberFormat('#,##0'); // clicks
-  operationReportSheet.getRange(existingRow, 5).setNumberFormat('0.00%'); // ctr
-  operationReportSheet.getRange(existingRow, 6).setNumberFormat('"¥"#,##0'); // cpc
-  operationReportSheet.getRange(existingRow, 7).setNumberFormat('"¥"#,##0'); // spend
-  operationReportSheet.getRange(existingRow, 8).setNumberFormat('#,##0'); // conversions
-  operationReportSheet.getRange(existingRow, 9).setNumberFormat('0.00%'); // cvr
-  operationReportSheet.getRange(existingRow, 10).setNumberFormat('"¥"#,##0'); // cpa
-  operationReportSheet.getRange(existingRow, 11).setNumberFormat('#,##0'); // 実CV
-  operationReportSheet.getRange(existingRow, 12).setNumberFormat('0.00%'); // 実CVR
-  operationReportSheet.getRange(existingRow, 13).setNumberFormat('"¥"#,##0'); // 実CPA
-
-  // 広告セットごとの情報を追加
-  let colIndex = 14;
-  for (const adset_name in adSetMap) {
-    const adSet = adSetMap[adset_name];
-    const adSetCtr = adSet.impressions ? (adSet.clicks / adSet.impressions) : 0; // 各広告セットのCTRを計算
-    const adSetRow = [
-      adSet.impressions,
-      adSet.clicks,
-      adSetCtr,
-      adSet.cpc,
-      adSet.spend,
-      adSet.conversions,
-      adSet.clicks ? adSet.conversions / adSet.clicks : 0, // 媒体CVR
-      adSet.conversions ? adSet.spend / adSet.conversions : 0, // 媒体CPA
-      0, // 実CV
-      0, // 実CVR
-      0  // 実CPA
-    ];
-
-    // 媒体CV、媒体CVR、媒体CPAに#NUM!が入る場合は0にする
-    for (let i = 6; i <= 8; i++) {
-      if (isNaN(adSetRow[i]) || !isFinite(adSetRow[i])) {
-        adSetRow[i] = 0;
-      }
-    }
-
-    // 広告セット名をN21, Y21, AJ21などに設定
-    operationReportSheet.getRange(21, colIndex).setValue(adset_name);
-
-    // C22:M22をN22:X22, Y22:AI22, AJ22:AT22などにコピー
-    const headerRange = operationReportSheet.getRange(22, 3, 1, 11);
-    headerRange.copyTo(operationReportSheet.getRange(22, colIndex, 1, 11));
-
-    // 広告セットの値をN23:X23, Y23:AI23, AJ23:AT23などに設定
-    operationReportSheet.getRange(existingRow, colIndex, 1, adSetRow.length).setValues([adSetRow]);
-
-    // 各項目の形式を指定
-    operationReportSheet.getRange(existingRow, colIndex).setNumberFormat('#,##0'); // impressions
-    operationReportSheet.getRange(existingRow, colIndex + 1).setNumberFormat('#,##0'); // clicks
-    operationReportSheet.getRange(existingRow, colIndex + 2).setNumberFormat('0.00%'); // ctr
-    operationReportSheet.getRange(existingRow, colIndex + 3).setNumberFormat('"¥"#,##0'); // cpc
-    operationReportSheet.getRange(existingRow, colIndex + 4).setNumberFormat('"¥"#,##0'); // spend
-    operationReportSheet.getRange(existingRow, colIndex + 5).setNumberFormat('#,##0'); // conversions
-    operationReportSheet.getRange(existingRow, colIndex + 6).setNumberFormat('0.00%'); // cvr
-    operationReportSheet.getRange(existingRow, colIndex + 7).setNumberFormat('"¥"#,##0'); // cpa
-    operationReportSheet.getRange(existingRow, colIndex + 8).setNumberFormat('#,##0'); // 実CV
-    operationReportSheet.getRange(existingRow, colIndex + 9).setNumberFormat('0.00%'); // 実CVR
-    operationReportSheet.getRange(existingRow, colIndex + 10).setNumberFormat('"¥"#,##0'); // 実CPA
-
-    colIndex += 11;
-  }
-
-  // シートを表示
-  operationReportSheet.activate();
+  // 運用レポートに広告セットシートのデータを整形して書き込む
+  makeOperationReport();
 
   // メッセージを表示
-  console.log(operationReportSheetName + "に広告セット情報を追記完了");
-}
-
-// 日付範囲を分割する関数
-function getDateRanges(daySince, dayUntil) {
-  var startDate = new Date(daySince);
-  var endDate = new Date(dayUntil);
-  var dateRanges = [];
-
-  while (startDate <= endDate) {
-    var nextDate = new Date(startDate);
-    nextDate.setDate(startDate.getDate() + 1);
-
-    dateRanges.push({
-      since: Utilities.formatDate(startDate, Session.getScriptTimeZone(), 'yyyy-MM-dd'),
-      until: Utilities.formatDate(nextDate, Session.getScriptTimeZone(), 'yyyy-MM-dd')
-    });
-
-    startDate = nextDate;
-  }
-
-  return dateRanges;
-}
-
-// バッチリクエストを送信する関数
-function sendBatchRequest(batchRequests) {
-  var apiUrl = `https://graph.facebook.com`;
-  var payload = {
-    access_token: facebook_getAccessToken(),
-    batch: JSON.stringify(batchRequests)
-  };
-
-  var options = {
-    method: "post",
-    payload: payload,
-    muteHttpExceptions: true
-  };
-
-  var response = UrlFetchApp.fetch(apiUrl, options);
-  return JSON.parse(response.getContentText());
+  console.log(sheetName + "情報 取得完了");
 }
 
 // 広告情報を取得する関数
@@ -329,7 +79,7 @@ function facebook_getAds(daySince, dayUntil) {
   var endpoint = "ads";
 
   console.log(sheetName + "情報 取得開始");
-  SpreadsheetApp.getActiveSpreadsheet().toast(sheetName + "情報を取得してCRTレポートを作成します。しばらくお待ちください。", "CRTレポート作成", 10);
+  SpreadsheetApp.getActiveSpreadsheet().toast(sheetName + "情報を取得してCRTレポートを作成します。");
 
   // https://developers.facebook.com/docs/marketing-api/reference/adgroup/insights/
   var fields = "campaign_id,campaign_name,adset_id,adset_name,ad_id,ad_name,impressions,cpm,clicks,ctr,cpc,actions,spend,date_start,date_stop";
@@ -476,6 +226,192 @@ function makeCreativeReport() {
 
   // メッセージを表示
   console.log(reportSheetName + "情報 取得完了");
+}
+
+// 運用レポートに広告セットシートのデータを整形して書き込む関数
+function makeOperationReport() {
+  console.log("makeOperationReport()");
+
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+
+  // 広告セットシートを取得
+  var adSetSheet = spreadsheet.getSheetByName('広告セット');
+  if (!adSetSheet) {
+    return;
+
+    // 広告セットシートのデータが0行の場合は処理を中断してメッセージを表示
+  } else if (adSetSheet.getLastRow() <= 1) {
+    return;
+  }
+
+  // 運用レポートシートを取得
+  var operationReportSheetName = '運用レポート';
+  var operationReportSheet = spreadsheet.getSheetByName(operationReportSheetName);
+  if (!operationReportSheet) {
+    return;
+  }
+
+  // シート情報の読み込み
+  const adSetData = adSetSheet.getRange(2, 1, adSetSheet.getLastRow() - 1, adSetSheet.getLastColumn()).getValues();
+  const adSetMap = {};
+
+  // 広告セットの情報を合算
+  adSetData.forEach(row => {
+    const [date_start, date_stop, adset_name, impressions, clicks, ctr, cpc, spend, conversions] = row;
+    if (!adSetMap[adset_name]) {
+      adSetMap[adset_name] = {
+        impressions: 0,
+        clicks: 0,
+        cpc: 0,
+        spend: 0,
+        conversions: 0,
+        date_stop: date_stop
+      };
+    }
+    adSetMap[adset_name].impressions += parseFloat(impressions) || 0;
+    adSetMap[adset_name].clicks += parseFloat(clicks) || 0;
+    adSetMap[adset_name].cpc += parseFloat(cpc) || 0;
+    adSetMap[adset_name].spend += parseFloat(spend) || 0;
+    adSetMap[adset_name].conversions += parseFloat(conversions) || 0;
+  });
+
+  // 合計値を計算
+  let totalImpressions = 0;
+  let totalClicks = 0;
+  let totalCtr = 0;
+  let totalCpc = 0;
+  let totalSpend = 0;
+  let totalConversions = 0;
+  let dateStop = '';
+
+  for (const adset_name in adSetMap) {
+    const adSet = adSetMap[adset_name];
+    totalImpressions += adSet.impressions;
+    totalClicks += adSet.clicks;
+    totalSpend += adSet.spend;
+    totalConversions += adSet.conversions;
+    if (!dateStop) {
+      dateStop = adSet.date_stop;
+    }
+  }
+
+  // 全広告セットのCTRを計算
+  totalCtr = totalImpressions ? (totalClicks / totalImpressions) : 0;
+
+  const totalRow = [
+    dateStop,
+    totalImpressions,
+    totalClicks,
+    totalCtr,
+    totalCpc,
+    totalSpend,
+    totalConversions,
+    totalClicks ? totalConversions / totalClicks : 0, // 媒体CVR
+    totalConversions ? totalSpend / totalConversions : 0, // 媒体CPA
+    0, // 実CV
+    0, // 実CVR
+    0  // 実CPA
+  ];
+
+  // 運用レポートシートのデータを取得
+  const operationReportData = operationReportSheet.getDataRange().getValues();
+  let startRow = 23;
+
+  // 既存のdate_stopをチェック
+  let existingRow = -1;
+  for (let i = startRow - 1; i < operationReportData.length; i++) {
+    if (operationReportData[i][1] === dateStop) {
+      existingRow = i + 1;
+      break;
+    }
+  }
+
+  if (existingRow === -1) {
+    // 新しい行にデータを追加
+    for (let i = startRow - 1; i < operationReportData.length; i++) {
+      if (!operationReportData[i][1]) {
+        existingRow = i + 1;
+        break;
+      }
+    }
+    if (existingRow === -1) {
+      existingRow = operationReportData.length + 1;
+    }
+  }
+
+  // 全広告セットの合計値をC列からM列に入れる
+  operationReportSheet.getRange(existingRow, 2, 1, totalRow.length).setValues([totalRow]);
+
+  // 各項目の形式を指定
+  operationReportSheet.getRange(existingRow, 3).setNumberFormat('#,##0'); // impressions
+  operationReportSheet.getRange(existingRow, 4).setNumberFormat('#,##0'); // clicks
+  operationReportSheet.getRange(existingRow, 5).setNumberFormat('0.00%'); // ctr
+  operationReportSheet.getRange(existingRow, 6).setNumberFormat('"¥"#,##0'); // cpc
+  operationReportSheet.getRange(existingRow, 7).setNumberFormat('"¥"#,##0'); // spend
+  operationReportSheet.getRange(existingRow, 8).setNumberFormat('#,##0'); // conversions
+  operationReportSheet.getRange(existingRow, 9).setNumberFormat('0.00%'); // cvr
+  operationReportSheet.getRange(existingRow, 10).setNumberFormat('"¥"#,##0'); // cpa
+  operationReportSheet.getRange(existingRow, 11).setNumberFormat('#,##0'); // 実CV
+  operationReportSheet.getRange(existingRow, 12).setNumberFormat('0.00%'); // 実CVR
+  operationReportSheet.getRange(existingRow, 13).setNumberFormat('"¥"#,##0'); // 実CPA
+
+  // 広告セットごとの情報を追加
+  let colIndex = 14;
+  for (const adset_name in adSetMap) {
+    const adSet = adSetMap[adset_name];
+    const adSetCtr = adSet.impressions ? (adSet.clicks / adSet.impressions) : 0; // 各広告セットのCTRを計算
+    const adSetRow = [
+      adSet.impressions,
+      adSet.clicks,
+      adSetCtr,
+      adSet.cpc,
+      adSet.spend,
+      adSet.conversions,
+      adSet.clicks ? adSet.conversions / adSet.clicks : 0, // 媒体CVR
+      adSet.conversions ? adSet.spend / adSet.conversions : 0, // 媒体CPA
+      0, // 実CV
+      0, // 実CVR
+      0  // 実CPA
+    ];
+
+    // 媒体CV、媒体CVR、媒体CPAに#NUM!が入る場合は0にする
+    for (let i = 6; i <= 8; i++) {
+      if (isNaN(adSetRow[i]) || !isFinite(adSetRow[i])) {
+        adSetRow[i] = 0;
+      }
+    }
+
+    // 広告セット名をN21, Y21, AJ21などに設定
+    operationReportSheet.getRange(21, colIndex).setValue(adset_name);
+
+    // C22:M22をN22:X22, Y22:AI22, AJ22:AT22などにコピー
+    const headerRange = operationReportSheet.getRange(22, 3, 1, 11);
+    headerRange.copyTo(operationReportSheet.getRange(22, colIndex, 1, 11));
+
+    // 広告セットの値をN23:X23, Y23:AI23, AJ23:AT23などに設定
+    operationReportSheet.getRange(existingRow, colIndex, 1, adSetRow.length).setValues([adSetRow]);
+
+    // 各項目の形式を指定
+    operationReportSheet.getRange(existingRow, colIndex).setNumberFormat('#,##0'); // impressions
+    operationReportSheet.getRange(existingRow, colIndex + 1).setNumberFormat('#,##0'); // clicks
+    operationReportSheet.getRange(existingRow, colIndex + 2).setNumberFormat('0.00%'); // ctr
+    operationReportSheet.getRange(existingRow, colIndex + 3).setNumberFormat('"¥"#,##0'); // cpc
+    operationReportSheet.getRange(existingRow, colIndex + 4).setNumberFormat('"¥"#,##0'); // spend
+    operationReportSheet.getRange(existingRow, colIndex + 5).setNumberFormat('#,##0'); // conversions
+    operationReportSheet.getRange(existingRow, colIndex + 6).setNumberFormat('0.00%'); // cvr
+    operationReportSheet.getRange(existingRow, colIndex + 7).setNumberFormat('"¥"#,##0'); // cpa
+    operationReportSheet.getRange(existingRow, colIndex + 8).setNumberFormat('#,##0'); // 実CV
+    operationReportSheet.getRange(existingRow, colIndex + 9).setNumberFormat('0.00%'); // 実CVR
+    operationReportSheet.getRange(existingRow, colIndex + 10).setNumberFormat('"¥"#,##0'); // 実CPA
+
+    colIndex += 11; // 広告セット同士の間に不要な空の列がないようにする
+  }
+
+  // シートを表示
+  operationReportSheet.activate();
+
+  // メッセージを表示
+  console.log(operationReportSheetName + "に広告セット情報を追記完了");
 }
 
 // スプレッドシートからアクセストークンを取得する関数
