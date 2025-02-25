@@ -4,43 +4,151 @@
     <script>
       // ページがロードされた時にデフォルトの日付を設定
       window.onload = function() {
-        let fixedStartDate = "2025-01-10"; // 固定の開始日
-        let fixedEndDate = "2025-01-11";   // 固定の終了日
+        const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(today.getDate() - 1);
 
-        document.getElementById("start-date").value = fixedStartDate;
-        document.getElementById("end-date").value = fixedEndDate;
+        const oneMonthAgo = new Date(today);
+        oneMonthAgo.setMonth(today.getMonth() - 1);
+
+        const formatDate = (date) => {
+          const year = date.getFullYear();
+          const month = ('0' + (date.getMonth() + 1)).slice(-2);
+          const day = ('0' + date.getDate()).slice(-2);
+          return `${year}-${month}-${day}`;
+        };
+
+        // 広告取得・CRTレポート作成の初期値設定
+        document.getElementById("start-date-ads").value = formatDate(oneMonthAgo);
+        document.getElementById("end-date-ads").value = formatDate(yesterday);
+
+        // 広告セット取得の初期値設定
+        document.getElementById("start-date-adsets").value = formatDate(yesterday);
+        document.getElementById("end-date-adsets").value = formatDate(yesterday);
+
+        // 運用レポート作成の初期値設定
+        document.getElementById("start-date-operation").value = formatDate(yesterday);
+        document.getElementById("end-date-operation").value = formatDate(yesterday);
+
+        // キャンペーン取得の初期値設定
+        document.getElementById("start-date-campaign").value = formatDate(oneMonthAgo);
+        document.getElementById("end-date-campaign").value = formatDate(yesterday);
       };
 
-      function runScript() {
-        let startDate = document.getElementById("start-date").value;
-        let endDate = document.getElementById("end-date").value;
+      // facebook_getAdsを実行する関数
+      function runGetAds() {
+        let startDate = document.getElementById("start-date-ads").value;
+        let endDate = document.getElementById("end-date-ads").value;
 
-        if (!startDate || !endDate) {
-          alert("開始日と終了日の両方を選択してください");
-          return;
-        }
-
-        alert(`広告データを取得中です。\n\nしばらくお待ちください。\n\n期間: ${startDate} ~ ${endDate}`);
+        console.log(`広告データを取得します。期間: ${startDate} ~ ${endDate}`);
 
         google.script.run
           .withSuccessHandler(() => {
-            alert(`広告データの取得が完了しました。「広告」シートをご確認ください。期間: ${startDate} ~ ${endDate}`);
+            console.log(`広告データの取得が完了しました。期間: ${startDate} ~ ${endDate}`);
           })
           .withFailureHandler((error) => {
-            alert(`エラーが発生しました: ${error.message}`);
+            console.log(`エラーが発生しました: ${error.message}`);
           })
           .facebook_getAds(startDate, endDate);
       }
+
+      // facebook_getAdSetsを実行する関数
+      function runGetAdSets() {
+        let startDate = document.getElementById("start-date-adsets").value;
+        let endDate = document.getElementById("end-date-adsets").value;
+
+        console.log(`広告セットデータを取得します。期間: ${startDate} ~ ${endDate}`);
+
+        google.script.run
+          .withSuccessHandler(() => {
+            console.log(`広告セットデータの取得が完了しました。期間: ${startDate} ~ ${endDate}`);
+          })
+          .withFailureHandler((error) => {
+            console.log(`エラーが発生しました: ${error.message}`);
+          })
+          .facebook_getAdSets(startDate, endDate);
+      }
+
+      // facebook_getCampaignを実行する関数
+      function runGetCampaign() {
+        let startDate = document.getElementById("start-date-campaign").value;
+        let endDate = document.getElementById("end-date-campaign").value;
+
+        console.log(`キャンペーンデータを取得します。期間: ${startDate} ~ ${endDate}`);
+
+        google.script.run
+          .withSuccessHandler(() => {
+            console.log(`キャンペーンデータの取得が完了しました。期間: ${startDate} ~ ${endDate}`);
+          })
+          .withFailureHandler((error) => {
+            console.log(`エラーが発生しました: ${error.message}`);
+          })
+          .facebook_getCampaign(startDate, endDate);
+      }
+
+      // getAdSetsAndMakeOperationReportを実行する関数
+      function runGetAdSetsAndMakeOperationReport() {
+        let startDate = document.getElementById("start-date-operation").value;
+        let endDate = document.getElementById("end-date-operation").value;
+
+        console.log(`広告セットデータを取得して運用レポートを作成します。期間: ${startDate} ~ ${endDate}`);
+
+        google.script.run
+          .withSuccessHandler(() => {
+            console.log(`広告セットデータの取得を取得して運用レポートを作成しました。期間: ${startDate} ~ ${endDate}`);
+          })
+          .withFailureHandler((error) => {
+            console.log(`エラーが発生しました: ${error.message}`);
+          })
+          .getAdSetsAndMakeOperationReport(startDate, endDate);
+      }
     </script>
   </head>
+
   <body>
-    <h3>Facebook広告データ取得</h3>
+    <!-- クリエイティブレポート -->
+    <h4>CRTレポート作成</h4>
+
     <label>開始日: </label>
-    <input type="date" id="start-date"><br><br>
+    <input type="date" id="start-date-ads"><br><br>
+    
+    <label>終了日: </label>
+    <input type="date" id="end-date-ads"><br><br>
+
+    <button onclick="runGetAds()">実行</button><br><br>
+
+    <!-- 運用レポート -->
+    <h4>運用レポート記入</h4>
+
+    <label>開始日: </label>
+    <input type="date" id="start-date-operation"><br><br>
 
     <label>終了日: </label>
-    <input type="date" id="end-date"><br><br>
+    <input type="date" id="end-date-operation"><br><br>
 
-    <button onclick="runScript()">データ取得</button>
+    <button onclick="runGetAdSetsAndMakeOperationReport()">実行</button><br><br>
+
+    <!-- 広告セット -->
+    <h4>広告セット取得</h4>
+
+    <label>開始日: </label>
+    <input type="date" id="start-date-adsets"><br><br>
+
+    <label>終了日: </label>
+    <input type="date" id="end-date-adsets"><br><br>
+
+    <button onclick="runGetAdSets()">実行</button><br><br>
+
+    <!-- キャンペーン -->
+    <h4>キャンペーン取得</h4>
+
+    <label>開始日: </label>
+    <input type="date" id="start-date-campaign"><br><br>
+
+    <label>終了日: </label>
+    <input type="date" id="end-date-campaign"><br><br>
+
+    <button onclick="runGetCampaign()">実行</button>
+
   </body>
 </html>
