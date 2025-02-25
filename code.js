@@ -50,6 +50,7 @@ function facebook_getAdSets(daySince, dayUntil) {
 // 引数：開始日, 終了日
 function getAdSetsAndMakeOperationReport(daySince, dayUntil) {
   console.log(`getAdSetsAndMakeOperationReport(${daySince}, ${dayUntil})`);
+  SpreadsheetApp.getActiveSpreadsheet().toast("しばらくお待ちください。", "運用レポート記入", 10);
 
   var currentDate = new Date(daySince);
   var endDate = new Date(dayUntil);
@@ -259,10 +260,6 @@ function makeOperationReport() {
   var adSetSheet = spreadsheet.getSheetByName('広告セット');
   if (!adSetSheet) {
     return;
-
-    // 広告セットシートのデータが0行の場合は処理を中断してメッセージを表示
-  } else if (adSetSheet.getLastRow() <= 1) {
-    return;
   }
 
   // 運用レポートシートを取得
@@ -360,72 +357,77 @@ function makeOperationReport() {
     }
   }
 
-  // 全広告セットの合計値をC列からM列に入れる
-  operationReportSheet.getRange(existingRow, 2, 1, totalRow.length).setValues([totalRow]);
-
-  // 各項目の形式を指定
-  operationReportSheet.getRange(existingRow, 3).setNumberFormat('#,##0'); // impressions
-  operationReportSheet.getRange(existingRow, 4).setNumberFormat('#,##0'); // clicks
-  operationReportSheet.getRange(existingRow, 5).setNumberFormat('0.00%'); // ctr
-  operationReportSheet.getRange(existingRow, 6).setNumberFormat('"¥"#,##0'); // cpc
-  operationReportSheet.getRange(existingRow, 7).setNumberFormat('"¥"#,##0'); // spend
-  operationReportSheet.getRange(existingRow, 8).setNumberFormat('#,##0'); // conversions
-  operationReportSheet.getRange(existingRow, 9).setNumberFormat('0.00%'); // cvr
-  operationReportSheet.getRange(existingRow, 10).setNumberFormat('"¥"#,##0'); // cpa
-  operationReportSheet.getRange(existingRow, 11).setNumberFormat('#,##0'); // 実CV
-  operationReportSheet.getRange(existingRow, 12).setNumberFormat('0.00%'); // 実CVR
-  operationReportSheet.getRange(existingRow, 13).setNumberFormat('"¥"#,##0'); // 実CPA
-
-  // 広告セットごとの情報を追加
-  let colIndex = 14;
-  for (const adset_name in adSetMap) {
-    const adSet = adSetMap[adset_name];
-    const adSetCtr = adSet.impressions ? (adSet.clicks / adSet.impressions) : 0; // 各広告セットのCTRを計算
-    const adSetRow = [
-      adSet.impressions,
-      adSet.clicks,
-      adSetCtr,
-      adSet.cpc,
-      adSet.spend,
-      adSet.conversions,
-      adSet.clicks ? adSet.conversions / adSet.clicks : 0, // 媒体CVR
-      adSet.conversions ? adSet.spend / adSet.conversions : 0, // 媒体CPA
-      0, // 実CV
-      0, // 実CVR
-      0  // 実CPA
-    ];
-
-    // 媒体CV、媒体CVR、媒体CPAに#NUM!が入る場合は0にする
-    for (let i = 6; i <= 8; i++) {
-      if (isNaN(adSetRow[i]) || !isFinite(adSetRow[i])) {
-        adSetRow[i] = 0;
-      }
-    }
-
-    // 広告セット名をN21, Y21, AJ21などに設定
-    operationReportSheet.getRange(21, colIndex).setValue(adset_name);
-
-    // C22:M22をN22:X22, Y22:AI22, AJ22:AT22などにコピー
-    const headerRange = operationReportSheet.getRange(22, 3, 1, 11);
-    headerRange.copyTo(operationReportSheet.getRange(22, colIndex, 1, 11));
-
-    // 広告セットの値をN23:X23, Y23:AI23, AJ23:AT23などに設定
-    operationReportSheet.getRange(existingRow, colIndex, 1, adSetRow.length).setValues([adSetRow]);
+  if (adSetData.length === 0) {
+    // 広告セットシートのデータが0行の場合、B列に日付だけ記入
+    operationReportSheet.getRange(existingRow, 2).setValue(dateStop);
+  } else {
+    // 全広告セットの合計値をC列からM列に入れる
+    operationReportSheet.getRange(existingRow, 2, 1, totalRow.length).setValues([totalRow]);
 
     // 各項目の形式を指定
-    operationReportSheet.getRange(existingRow, colIndex).setNumberFormat('#,##0'); // impressions
-    operationReportSheet.getRange(existingRow, colIndex + 1).setNumberFormat('#,##0'); // clicks
-    operationReportSheet.getRange(existingRow, colIndex + 2).setNumberFormat('0.00%'); // ctr
-    operationReportSheet.getRange(existingRow, colIndex + 3).setNumberFormat('"¥"#,##0'); // cpc
-    operationReportSheet.getRange(existingRow, colIndex + 4).setNumberFormat('"¥"#,##0'); // spend
-    operationReportSheet.getRange(existingRow, colIndex + 5).setNumberFormat('#,##0'); // conversions
-    operationReportSheet.getRange(existingRow, colIndex + 6).setNumberFormat('0.00%'); // cvr
-    operationReportSheet.getRange(existingRow, colIndex + 7).setNumberFormat('"¥"#,##0'); // cpa
-    operationReportSheet.getRange(existingRow, colIndex + 8).setNumberFormat('#,##0'); // 実CV
-    operationReportSheet.getRange(existingRow, colIndex + 9).setNumberFormat('0.00%'); // 実CVR
-    operationReportSheet.getRange(existingRow, colIndex + 10).setNumberFormat('"¥"#,##0'); // 実CPA
+    operationReportSheet.getRange(existingRow, 3).setNumberFormat('#,##0'); // impressions
+    operationReportSheet.getRange(existingRow, 4).setNumberFormat('#,##0'); // clicks
+    operationReportSheet.getRange(existingRow, 5).setNumberFormat('0.00%'); // ctr
+    operationReportSheet.getRange(existingRow, 6).setNumberFormat('"¥"#,##0'); // cpc
+    operationReportSheet.getRange(existingRow, 7).setNumberFormat('"¥"#,##0'); // spend
+    operationReportSheet.getRange(existingRow, 8).setNumberFormat('#,##0'); // conversions
+    operationReportSheet.getRange(existingRow, 9).setNumberFormat('0.00%'); // cvr
+    operationReportSheet.getRange(existingRow, 10).setNumberFormat('"¥"#,##0'); // cpa
+    operationReportSheet.getRange(existingRow, 11).setNumberFormat('#,##0'); // 実CV
+    operationReportSheet.getRange(existingRow, 12).setNumberFormat('0.00%'); // 実CVR
+    operationReportSheet.getRange(existingRow, 13).setNumberFormat('"¥"#,##0'); // 実CPA
 
-    colIndex += 11; // 広告セット同士の間に不要な空の列がないようにする
+    // 広告セットごとの情報を追加
+    let colIndex = 14;
+    for (const adset_name in adSetMap) {
+      const adSet = adSetMap[adset_name];
+      const adSetCtr = adSet.impressions ? (adSet.clicks / adSet.impressions) : 0; // 各広告セットのCTRを計算
+      const adSetRow = [
+        adSet.impressions,
+        adSet.clicks,
+        adSetCtr,
+        adSet.cpc,
+        adSet.spend,
+        adSet.conversions,
+        adSet.clicks ? adSet.conversions / adSet.clicks : 0, // 媒体CVR
+        adSet.conversions ? adSet.spend / adSet.conversions : 0, // 媒体CPA
+        0, // 実CV
+        0, // 実CVR
+        0  // 実CPA
+      ];
+
+      // 媒体CV、媒体CVR、媒体CPAに#NUM!が入る場合は0にする
+      for (let i = 6; i <= 8; i++) {
+        if (isNaN(adSetRow[i]) || !isFinite(adSetRow[i])) {
+          adSetRow[i] = 0;
+        }
+      }
+
+      // 広告セット名をN21, Y21, AJ21などに設定
+      operationReportSheet.getRange(21, colIndex).setValue(adset_name);
+
+      // C22:M22をN22:X22, Y22:AI22, AJ22:AT22などにコピー
+      const headerRange = operationReportSheet.getRange(22, 3, 1, 11);
+      headerRange.copyTo(operationReportSheet.getRange(22, colIndex, 1, 11));
+
+      // 広告セットの値をN23:X23, Y23:AI23, AJ23:AT23などに設定
+      operationReportSheet.getRange(existingRow, colIndex, 1, adSetRow.length).setValues([adSetRow]);
+
+      // 各項目の形式を指定
+      operationReportSheet.getRange(existingRow, colIndex).setNumberFormat('#,##0'); // impressions
+      operationReportSheet.getRange(existingRow, colIndex + 1).setNumberFormat('#,##0'); // clicks
+      operationReportSheet.getRange(existingRow, colIndex + 2).setNumberFormat('0.00%'); // ctr
+      operationReportSheet.getRange(existingRow, colIndex + 3).setNumberFormat('"¥"#,##0'); // cpc
+      operationReportSheet.getRange(existingRow, colIndex + 4).setNumberFormat('"¥"#,##0'); // spend
+      operationReportSheet.getRange(existingRow, colIndex + 5).setNumberFormat('#,##0'); // conversions
+      operationReportSheet.getRange(existingRow, colIndex + 6).setNumberFormat('0.00%'); // cvr
+      operationReportSheet.getRange(existingRow, colIndex + 7).setNumberFormat('"¥"#,##0'); // cpa
+      operationReportSheet.getRange(existingRow, colIndex + 8).setNumberFormat('#,##0'); // 実CV
+      operationReportSheet.getRange(existingRow, colIndex + 9).setNumberFormat('0.00%'); // 実CVR
+      operationReportSheet.getRange(existingRow, colIndex + 10).setNumberFormat('"¥"#,##0'); // 実CPA
+
+      colIndex += 11; // 広告セット同士の間に不要な空の列がないようにする
+    }
   }
 
   // シートを表示
@@ -676,8 +678,6 @@ function facebook_writeFacebookAdsDataToSheet(sheetName, endpoint, fields, daySi
   console.log(`facebook_writeFacebookAdsDataToSheet(${sheetName}, ${endpoint}, ${fields}, ${daySince}, ${dayUntil})`);
 
   var spreadsheet = SpreadsheetApp.getActiveSpreadsheet(); // スプレッドシートを取得
-
-
 
   // シートが存在する場合は、そのシートを削除
   var sheet = spreadsheet.getSheetByName(sheetName);
