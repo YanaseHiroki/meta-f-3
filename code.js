@@ -6,7 +6,7 @@ function facebook_getCampaign(daySince, dayUntil) {
   var endpoint = "campaigns";
 
   console.log(sheetName + "情報 取得開始");
-  SpreadsheetApp.getActiveSpreadsheet().toast(sheetName + "情報を取得します。");
+  SpreadsheetApp.getActiveSpreadsheet().toast("しばらくお待ちください。", sheetName + "取得", 10);
 
   // https://developers.facebook.com/docs/marketing-api/reference/ad-campaign-group/insights?locale=ja_JP
   var fields = "date_start,date_stop,account_id,account_name,campaign_id,campaign_name,impressions,inline_link_clicks,conversions,spend";
@@ -27,7 +27,7 @@ function facebook_getAdSets(daySince, dayUntil) {
   var endpoint = "adsets";
 
   console.log(sheetName + "情報 取得開始");
-  SpreadsheetApp.getActiveSpreadsheet().toast(sheetName + "情報を取得して運用レポートを作成します。");
+  SpreadsheetApp.getActiveSpreadsheet().toast("しばらくお待ちください。", sheetName + "取得", 10);
 
   // https://developers.facebook.com/docs/marketing-api/reference/ad-campaign/insights?locale=ja_JP  
   var fields = "date_start,date_stop,adset_name,impressions,clicks,ctr,cpc,spend,actions";
@@ -79,7 +79,7 @@ function facebook_getAds(daySince, dayUntil) {
   var endpoint = "ads";
 
   console.log(sheetName + "情報 取得開始");
-  SpreadsheetApp.getActiveSpreadsheet().toast(sheetName + "情報を取得してCRTレポートを作成します。");
+  SpreadsheetApp.getActiveSpreadsheet().toast("しばらくお待ちください。", sheetName + "取得", 10);
 
   // https://developers.facebook.com/docs/marketing-api/reference/adgroup/insights/
   var fields = "campaign_id,campaign_name,adset_id,adset_name,ad_id,ad_name,impressions,cpm,clicks,ctr,cpc,actions,spend,date_start,date_stop";
