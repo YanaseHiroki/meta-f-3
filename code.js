@@ -907,21 +907,17 @@ function getAdImageUrl(adId) {
 
   // サムネイルのサイズを拡大するパラメータ
   var thumbnail_height = "1080";
-  var thumbnail_width = "1080";
+  var thumbnail_width = "1920";
   var thumbnail_size_param = `thumbnail_height=${thumbnail_height}&thumbnail_width=${thumbnail_width}`
 
-  var creativeUrl = `https://graph.facebook.com/${apiVersion}/${creativeId}?fields=${fields}&${thumbnail_size_param}&access_token=${accessToken}`;
+  var creativeImageUrl = `https://graph.facebook.com/${apiVersion}/${creativeId}?fields=${fields}&${thumbnail_size_param}&access_token=${accessToken}`;
 
-  var creativeResponse = UrlFetchApp.fetch(creativeUrl);
+  var creativeResponse = UrlFetchApp.fetch(creativeImageUrl);
   var creative = JSON.parse(creativeResponse.getContentText());
 
   if (creative.image_url) {
     console.log(`getAdImageUrl 終了（返却値：${creative.image_url}）`);
     return creative.image_url;
-
-  } else if (creative.video_thumbnail_url) {
-    console.log(`getAdImageUrl 終了（返却値：${creative.video_thumbnail_url}）`);
-    return creative.video_thumbnail_url;
 
   } else if (creative.thumbnail_url) {
     console.log(`getAdImageUrl return: ${creative.thumbnail_url}`);
