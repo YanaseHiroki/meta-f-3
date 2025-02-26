@@ -906,9 +906,12 @@ function getAdImageUrl(adId) {
   // full_image_url,thumbnail_url
 
   // サムネイルのサイズを拡大するパラメータ
-  var thumbnail_height = "1080";
+  var thumbnail_height = "0";
   var thumbnail_width = "1920";
   var thumbnail_size_param = `thumbnail_height=${thumbnail_height}&thumbnail_width=${thumbnail_width}`
+
+  // creativeIdをコンソールに出力
+  console.log(`getAdImageUrl（creativeId：${creativeId}）`);
 
   var creativeImageUrl = `https://graph.facebook.com/${apiVersion}/${creativeId}?fields=${fields}&${thumbnail_size_param}&access_token=${accessToken}`;
 
