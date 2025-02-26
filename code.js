@@ -84,6 +84,9 @@ function getAdSetsAndMakeOperationReport(daySince, dayUntil) {
     currentDate.setDate(currentDate.getDate() + 1);
   }
 
+  // 「運用レポート」シートを表示
+  operationReportSheet.activate();
+
   console.log("getAdSetsAndMakeOperationReport 完了");
   SpreadsheetApp.getUi().alert("広告セット情報を取得して運用レポートを作成しました。");
 }
