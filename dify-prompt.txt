@@ -1,0 +1,85 @@
+```xml
+<instruction>
+    1. 受け取った広告情報(1～5件）をもとに現状整理と今後の示唆を作成します。広告情報としてリンク（{{image_link_1}}, {{image_link_2}}, {{image_link_3}}, {{image_link_4}}, {{image_link_5}}）と各種指標（{{cost_net_1}}, {{imp_1}}, {{cpm_1}}, {{click_1}}, {{ctr_1}}, {{cpc_1}}, {{cv_1}}, {{cvr_1}}, {{cpa_1}},{{cost_net_2}}, {{imp_2}}, {{cpm_2}}, {{click_2}}, {{ctr_2}}, {{cpc_2}}, {{cv_2}}, {{cvr_2}}, {{cpa_2}},{{cost_net_3}}, {{imp_3}}, {{cpm_3}}, {{click_3}}, {{ctr_3}}, {{cpc_3}}, {{cv_3}}, {{cvr_3}}, {{cpa_3}},{{cost_net_4}}, {{imp_4}}, {{cpm_4}}, {{click_4}}, {{ctr_4}}, {{cpc_4}}, {{cv_4}}, {{cvr_4}}, {{cpa_4}},{{cost_net_5}}, {{imp_5}}, {{cpm_5}}, {{click_5}}, {{ctr_5}}, {{cpc_5}}, {{cv_5}}, {{cvr_5}}, {{cpa_5}},）を受け取ります。
+    2. 現状整理では、全体の傾向や特に注目すべきポイントを明確に記述してください。
+    3. 今後の示唆では、現状を踏まえた上での今後の戦略や制作の方向性について提案してください。
+    4. 出力はXMLタグを含めず、自然な文章で記述してください。
+</instruction>
+
+<input>
+    <image_links>
+        <link_1>{{image_link_1}}</link_1>
+        <link_2>{{image_link_2}}</link_2>
+        <link_3>{{image_link_3}}</link_3>
+        <link_4>{{image_link_4}}</link_4>
+        <link_5>{{image_link_5}}</link_5>
+    </image_links>
+    <metrics>
+        <cost_net_1>{{cost_net_1}}</cost_net_1>
+        <imp_1>{{imp_1}}</imp_1>
+        <cpm_1>{{cpm_1}}</cpm_1>
+        <click_1>{{click_1}}</click_1>
+        <ctr_1>{{ctr_1}}</ctr_1>
+        <cpc_1>{{cpc_1}}</cpc_1>
+        <cv_1>{{cv_1}}</cv_1>
+        <cvr_1>{{cvr_1}}</cvr_1>
+        <cpa_1>{{cpa_1}}</cpa_1>
+        
+        <cost_net_2>{{cost_net_2}}</cost_net_2>
+        <imp_2>{{imp_2}}</imp_2>
+        <cpm_2>{{cpm_2}}</cpm_2>
+        <click_2>{{click_2}}</click_2>
+        <ctr_2>{{ctr_2}}</ctr_2>
+        <cpc_2>{{cpc_2}}</cpc_2>
+        <cv_2>{{cv_2}}</cv_2>
+        <cvr_2>{{cvr_2}}</cvr_2>
+        <cpa_2>{{cpa_2}}</cpa_2>
+        
+        <cost_net_3>{{cost_net_3}}</cost_net_3>
+        <imp_3>{{imp_3}}</imp_3>
+        <cpm_3>{{cpm_3}}</cpm_3>
+        <click_3>{{click_3}}</click_3>
+        <ctr_3>{{ctr_3}}</ctr_3>
+        <cpc_3>{{cpc_3}}</cpc_3>
+        <cv_3>{{cv_3}}</cv_3>
+        <cvr_3>{{cvr_3}}</cvr_3>
+        <cpa_3>{{cpa_3}}</cpa_3>
+        
+        <cost_net_4>{{cost_net_4}}</cost_net_4>
+        <imp_4>{{imp_4}}</imp_4>
+        <cpm_4>{{cpm_4}}</cpm_4>
+        <click_4>{{click_4}}</click_4>
+        <ctr_4>{{ctr_4}}</ctr_4>
+        <cpc_4>{{cpc_4}}</cpc_4>
+        <cv_4>{{cv_4}}</cv_4>
+        <cvr_4>{{cvr_4}}</cvr_4>
+        <cpa_4>{{cpa_4}}</cpa_4>
+        
+        <cost_net_5>{{cost_net_5}}</cost_net_5>
+        <imp_5>{{imp_5}}</imp_5>
+        <cpm_5>{{cpm_5}}</cpm_5>
+        <click_5>{{click_5}}</click_5>
+        <ctr_5>{{ctr_5}}</ctr_5>
+        <cpc_5>{{cpc_5}}</cpc_5>
+        <cv_5>{{cv_5}}</cv_5>
+        <cvr_5>{{cvr_5}}</cvr_5>
+        <cpa_5>{{cpa_5}}</cpa_5>
+        
+    </metrics>
+</input>
+
+<output>
+    <current_status>現状整理：{{current_status}}</current_status>
+    <future_implications>今後の示唆：{{future_implications}}</future_implications>
+</output>
+
+<example>
+    例１：
+    現状整理：引き続き1日1粒訴求が全体のCV数をけん引。CV数が過剰になっているが、粒見せだけでなくパッケージ画像もCVRが高い状況
+    今後の示唆：1日1粒は軸にしつつ、様々な素材との掛け合わせでデザインを開拓できる余地あり。現状制作中のバナーの中にも含まれているため、そちらをこのまま進めていく。
+
+    例２：
+    現状整理：1日1粒だけでなく、「Wの機能」を訴求したバナーも非常に好調で、特にCVRが高い傾向
+    今後の示唆：W機能軸はあまり制作してきていない軸のため、今後の展開の候補とする。特にここまで1日1粒訴求がメインになってきているため、優先度をあげて制作していきたい。
+</example>
+```
