@@ -1,0 +1,1 @@
+Meta広告の画像URLと広告結果（Cost Gross	Cost net	Imp	CPM	Click	CTR	CPC	CV	CVR	CPA）の値を受けて分析する。
