@@ -247,6 +247,8 @@ function makeCreativeReport() {
 
       // C~P列に対応するデータを設定
       var imageUrl = ad.imageUrl;
+      const cvr = ad.row[headers.indexOf('clicks')] ? ad.conversion / ad.row[headers.indexOf('clicks')] : 0;
+      const cpa = ad.conversion ? ad.spend / ad.conversion : 0;
       reportSheet.getRange(rowIndex, 3).setValue(imageUrl);
       reportSheet.getRange(rowIndex, 4).setFormula(`=IMAGE("${imageUrl}")`);
       reportSheet.getRange(rowIndex, 5).setValue(ad.spend / 0.7);
@@ -257,8 +259,8 @@ function makeCreativeReport() {
       reportSheet.getRange(rowIndex, 10).setValue(ad.row[headers.indexOf('ctr')]);
       reportSheet.getRange(rowIndex, 11).setValue(ad.row[headers.indexOf('cpc')]);
       reportSheet.getRange(rowIndex, 12).setValue(ad.conversion);
-      reportSheet.getRange(rowIndex, 13).setValue(ad.conversion / ad.row[headers.indexOf('clicks')]);
-      reportSheet.getRange(rowIndex, 14).setValue(ad.spend / ad.conversion);
+      reportSheet.getRange(rowIndex, 13).setValue(cvr);
+      reportSheet.getRange(rowIndex, 14).setValue(cpa);
       reportSheet.getRange(rowIndex, 15).setValue(ad.row[headers.indexOf('date_start')]);
       reportSheet.getRange(rowIndex, 16).setValue(ad.row[headers.indexOf('date_stop')]);
     }
