@@ -7,6 +7,7 @@ function difyWorkflowApi() {
     };
     
     // Extracting additional parameters from the sheet
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("CRTレポート");
     const adName = sheet.getRange("B5").getValue();
     const imageUrl = sheet.getRange("C5").getValue();
     const costNet = sheet.getRange("F5").getValue();
@@ -19,40 +20,45 @@ function difyWorkflowApi() {
     const cvr = sheet.getRange("M5").getValue();
     const cpa = sheet.getRange("N5").getValue();
 
-    // prepare payload
+    // inputs for payload
     const inputs = {
             'ad_name': adName,
             'image_url': imageUrl,
             'spend': costNet,
             'impression': imp,
+            'cpm': cpm,
             'click': click,
-            'conversion': cv
+            'ctr': ctr,
+            'cpc': cpc,
+            'conversion': cv,
+            'cvr': cvr,
+            'cpa': cpa
         };
 
-    const data = {
+    const payload = JSON.stringify({
         "user": "gas-difyWorkflowApi",                            // 任意の文字列で可能（監視で表示される）
         "response_mode": "blocking",                    // streaming or blocking 
         'inputs': inputs
-    };
+    });
 
     const options = {
         "method": "post",
-        "payload": JSON.stringify(data),
+        "payload": payload,
         "headers": headers,
         "muteHttpExceptions": true                      // エラーを平文で返してもらう
     };
 
     const requestUrl = "https://api.dify.ai/v1/workflows/run";
     const response = UrlFetchApp.fetch(requestUrl, options);
-    const responseText = response.getContentText()
+    const responseText = response.getContentText();
+    const responseJson = JSON.parse(responseText);
 
     // 帰ってきたレスポンスを表示
-    Logger.log(responseText);                         // レスポンス内容をログに出力
-
+    Logger.log("responseText: " + responseText);
+    
     // StatusCodeによって処理分岐
     if (response.getResponseCode() === 200) {
-        const responseJson = JSON.parse(responseText);
-        Logger.log(responseJson.data.outputs.PR)
+        Logger.log('responseJson.data.outputs.text: ' + responseJson.data.outputs.text); // レスポンスのdata部分をログ出力
     } else {
         Logger.log("Error"); // エラー発生時のログ出力
     }
