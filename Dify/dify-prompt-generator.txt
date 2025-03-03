@@ -1,1 +1,1 @@
-Meta広告の画像URLと広告結果（Cost Gross	Cost net	Imp	CPM	Click	CTR	CPC	CV	CVR	CPA）の値を受けて分析する。
+Meta広告の広告名と画像URLと広告結果（Cost Gross	Cost net	Imp	CPM	Click	CTR	CPC	CV	CVR	CPA）の値を受けて分析して、「現状整理」と「今後の示唆」を出力する。
