@@ -143,7 +143,7 @@ function facebook_getAds(daySince, dayUntil) {
   SpreadsheetApp.getUi().alert(sheetName + "情報を取得してCRTレポートを作成しました。");
 }
 
-// 「広告」シートをもとにクリエイティブレポート（「CRTレポート-仮」シート）を作成する関数
+// 「広告」シートをもとにクリエイティブレポート（「CRTレポート」シート）を作成する関数
 function makeCreativeReport() {
   console.log("makeCreativeReport()");
 
@@ -264,6 +264,14 @@ function makeCreativeReport() {
       reportSheet.getRange(rowIndex, 15).setValue(ad.row[headers.indexOf('date_start')]);
       reportSheet.getRange(rowIndex, 16).setValue(ad.row[headers.indexOf('date_stop')]);
     }
+
+    // 広告情報の範囲を取得してdifyChatflowApiを呼び出す
+    var adDataRange = reportSheet.getRange(startRow + 2, 2, topAds.length, 15).getValues();
+    var answerJson = difyChatflowApi(adDataRange);
+    
+    // answerJsonの内容をシートに書き込む
+    reportSheet.getRange(startRow + 8, 3).setValue(answerJson.current_status);
+    reportSheet.getRange(startRow + 9, 3).setValue(answerJson.future_implications);
 
     startRow += 11; // 次の広告セットのために11行下に移動
   }

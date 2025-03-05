@@ -1,15 +1,13 @@
 // Difyの「1~5個の広告を分析するCF」にAPIで接続する
 // DifyのワークフローにAPIで接続する
 // 接続先：1つの広告を分析するWF
-function difyChatflowApi() {
+function difyChatflowApi(data) {
+
+    // ヘッダー情報
     const headers = {
-        'Authorization': "Bearer app-45HKkeZwPDkHlkKez0J8fsqD",  //api key　(1~5個の広告を分析するCF-file試す)
+        'Authorization': "Bearer app-45HKkeZwPDkHlkKez0J8fsqD",  //api key　(1~5個の広告を分析するCF)
         'Content-Type': 'application/json'              //必須
     };
-    
-    // Extracting additional parameters from the sheet
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("CRTレポート");
-    const data = sheet.getRange("B5:N9").getValues(); // B5:N9の範囲を取得（最大5行）
 
     let addArr = [];
     let imagesForPayload = [];
@@ -69,7 +67,9 @@ function difyChatflowApi() {
         const answerJson = JSON.parse(responseJson.answer);
         Logger.log('現状整理: ' + answerJson.current_status);
         Logger.log('今後の示唆: ' + answerJson.future_implications);
+        console.log('difyChatflowApi return answerJson: ' + JSON.stringify(answerJson));
+        return answerJson;
     } else {
-        Logger.log("Error");
+        Logger.log("difyChatflowApi Error");
     }
 }
