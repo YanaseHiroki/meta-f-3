@@ -10,6 +10,7 @@ function difyChatflowApi() {
     // Extracting additional parameters from the sheet
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("CRTレポート");
     const data = sheet.getRange("B5:N9").getValues(); // B5:N9の範囲を取得（最大5行）
+
     let addArr = [];
     let imagesForPayload = [];
 
@@ -36,9 +37,10 @@ function difyChatflowApi() {
     });
 
     const addsForPayloard = JSON.stringify(addArr);
+    Logger.log('adds: ' + addsForPayloard);
 
     const payload = JSON.stringify({
-        "user": "gas-difyChatflowApi",                            // 任意の文字列で可能（監視で表示される）
+        "user": "gas-difyChatflowApi",
         'response_mode': 'blocking',
         'inputs': {
             "adds": addsForPayloard,
@@ -51,7 +53,7 @@ function difyChatflowApi() {
         "method": "post",
         "payload": payload,
         "headers": headers,
-        "muteHttpExceptions": true                      // エラーを平文で返してもらう
+        "muteHttpExceptions": true
     };
 
     const requestUrl = "https://api.dify.ai/v1/chat-messages";
