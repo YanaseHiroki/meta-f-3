@@ -70,6 +70,6 @@ function difyChatflowApi() {
         Logger.log('現状整理: ' + answerJson.current_status);
         Logger.log('今後の示唆: ' + answerJson.future_implications);
     } else {
-        Logger.log("Error"); // エラー発生時のログ出力
+        Logger.log("Error");
     }
 }
