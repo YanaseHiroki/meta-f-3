@@ -2,6 +2,12 @@
 function facebook_getCampaign(daySince, dayUntil) {
   console.log(`facebook_getCampaign(${daySince},${dayUntil})`);
 
+  // 引数が渡されていなければロギングして終了
+  if (!daySince || !dayUntil) {
+    console.log('日付が指定されていません。');
+    return;
+  }
+
   var sheetName = "キャンペーン";
   var endpoint = "campaigns";
 
@@ -22,6 +28,12 @@ function facebook_getCampaign(daySince, dayUntil) {
 // 広告セット情報を取得する関数
 function facebook_getAdSets(daySince, dayUntil) {
   console.log(`facebook_getAdSets(${daySince},${dayUntil})`);
+
+  // 引数が渡されていなければロギングして終了
+  if (!daySince || !dayUntil) {
+    console.log('日付が指定されていません。');
+    return;
+  }
 
   var sheetName = "広告セット";
   var endpoint = "adsets";
@@ -49,6 +61,12 @@ function facebook_getAdSets(daySince, dayUntil) {
 // 引数：開始日, 終了日
 function getAdSetsAndMakeOperationReport(daySince, dayUntil) {
   console.log(`getAdSetsAndMakeOperationReport(${daySince}, ${dayUntil})`);
+
+  // 引数が渡されていなければロギングして終了
+  if (!daySince || !dayUntil) {
+    console.log('日付が指定されていません。');
+    return;
+  }
   SpreadsheetApp.getActiveSpreadsheet().toast("しばらくお待ちください。", "運用レポート記入", 10);
 
   var currentDate = new Date(daySince);
@@ -119,6 +137,12 @@ function facebook_getAdSetsForYesterday() {
 // 広告情報を取得する関数
 function facebook_getAds(daySince, dayUntil) {
   console.log(`facebook_getAds(${daySince},${dayUntil})`);
+
+  // 引数が渡されていなければロギングして終了
+  if (!daySince || !dayUntil) {
+    console.log('日付が指定されていません。');
+    return;
+  }
 
   var sheetName = "広告";
   var endpoint = "ads";
