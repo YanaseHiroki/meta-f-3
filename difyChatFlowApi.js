@@ -3,7 +3,7 @@
 // 接続先：1つの広告を分析するWF
 function difyChatflowApi() {
     const headers = {
-        'Authorization': "Bearer app-ROciu3Dz5jcuIPAOAEUQNGTe",  //api key発行してペースト
+        'Authorization': "Bearer app-45HKkeZwPDkHlkKez0J8fsqD",  //api key　(1~5個の広告を分析するCF-file試す)
         'Content-Type': 'application/json'              //必須
     };
     
@@ -37,10 +37,9 @@ function difyChatflowApi() {
 
     const payload = JSON.stringify({
         "user": "gas-difyChatflowApi",                            // 任意の文字列で可能（監視で表示される）
-        'response_mode': 'streaming',
+        'response_mode': 'blocking',
         'inputs': {
-            "adds": addArr,
-            "image_urls": imgUrlArr.join(",")
+            "adds": JSON.stringify(addArr),
         },
         'query': 'この広告を分析してください。',
         'files': imagesForPayload
@@ -53,7 +52,7 @@ function difyChatflowApi() {
         "muteHttpExceptions": true                      // エラーを平文で返してもらう
     };
 
-    const requestUrl = "https://api.dify.ai/v1/chatflows/run";
+    const requestUrl = "https://api.dify.ai/v1/chat-messages";
     const response = UrlFetchApp.fetch(requestUrl, options);
     const responseText = response.getContentText();
     const responseJson = JSON.parse(responseText);
@@ -63,7 +62,9 @@ function difyChatflowApi() {
     
     // StatusCodeによって処理分岐
     if (response.getResponseCode() === 200) {
-        Logger.log('responseJson.data.outputs.text: ' + responseJson.data.outputs.text); // レスポンスのdata部分をログ出力
+        const answerJson = JSON.parse(responseJson.answer);
+        Logger.log('現状整理: ' + answerJson.current_status);
+        Logger.log('今後の示唆: ' + answerJson.future_implications);
     } else {
         Logger.log("Error"); // エラー発生時のログ出力
     }
