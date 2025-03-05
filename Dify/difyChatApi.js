@@ -35,10 +35,12 @@ function difyChatflowApi() {
         }
     });
 
+    // 広告情報をJSON形式に変換
     const addsForPayloard = JSON.stringify(addArr);
-
+    Logger.log('addsForPayloard: ' + addsForPayloard);
+    
     const payload = JSON.stringify({
-        "user": "gas-difyChatflowApi",                            // 任意の文字列で可能（監視で表示される）
+        "user": "gas-difyChatflowApi",
         'response_mode': 'blocking',
         'inputs': {
             "adds": addsForPayloard,
@@ -51,7 +53,7 @@ function difyChatflowApi() {
         "method": "post",
         "payload": payload,
         "headers": headers,
-        "muteHttpExceptions": true                      // エラーを平文で返してもらう
+        "muteHttpExceptions": true
     };
 
     const requestUrl = "https://api.dify.ai/v1/chat-messages";
