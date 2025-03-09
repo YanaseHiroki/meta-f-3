@@ -2,7 +2,7 @@
 // 接続先：1つの広告を分析するWF
 function difyImageTest() {
     const headers = {
-        'Authorization': "Bearer app-EV39iJ5fu9bjLTvpwhqvdm5S",  //api key発行してペースト
+        'Authorization': "Bearer app-ndYbBgnZ8YXXcNmZ44W2REmr",  //api key発行してペースト
         'Content-Type': 'application/json'              //必須
     };
     
@@ -22,22 +22,24 @@ function difyImageTest() {
 
     // inputs for payload
     const inputs = {
-            'ad_name': adName,
-            'image_url': imageUrl,
-            'spend': costNet,
-            'impression': imp,
-            'cpm': cpm,
-            'click': click,
-            'ctr': ctr,
-            'cpc': cpc,
-            'conversion': cv,
-            'cvr': cvr,
-            'cpa': cpa
+            // 'ad_name': adName,
+            // 'image_url': imageUrl,
+            // 'spend': costNet,
+            // 'impression': imp,
+            // 'cpm': cpm,
+            // 'click': click,
+            // 'ctr': ctr,
+            // 'cpc': cpc,
+            // 'conversion': cv,
+            // 'cvr': cvr,
+            // 'cpa': cpa
+            'image_url': imageUrl
         };
 
     const payload = JSON.stringify({
         "user": "gas-difyImageTest",
         "response_mode": "blocking",
+        "inputs": inputs
     });
 
     const options = {
