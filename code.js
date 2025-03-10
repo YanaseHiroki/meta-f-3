@@ -563,11 +563,11 @@ function refreshAccessToken() {
   const shortLivedToken = loadAccessToken(); // 現在の短期間トークンを取得
 
   // URLとクエリパラメータの構築
-  const apiVersion = 'v22.0'; // 使用するAPIバージョン
+  const apiVersion = PropertiesService.getScriptProperties().getProperty("API_VERSION");
   const baseUrl = `https://graph.facebook.com/${apiVersion}/oauth/access_token`;
   const queryParams = {
     grant_type: "fb_exchange_token",
-    client_id: clientId,
+    client_id: clientId, 
     client_secret: clientSecret,
     fb_exchange_token: shortLivedToken,
   };
