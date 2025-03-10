@@ -5,20 +5,23 @@ function registerMetaLongToken() {
 
     // クライアントIDを入力してもらう
     const appId = promptUserInput("META_APP_ID_PROMPT");
-    if (appId) return;
+    if (!appId) return;
 
     // クライアントシークレットを入力してもらう
     const appSecret = promptUserInput("META_APP_SECRET_PROMPT");
-    if (appSecret) return;
+    if (!appSecret) return;
 
     // 短期アクセストークンを入力してもらう
     const accessToken = promptUserInput("META_ACCESS_TOKEN_PROMPT");
-    if (accessToken) return;
+    if (!accessToken) return;
 
     // 長期アクセストークンを取得
     const longAccessToken = getLongAccessToken(appId, appSecret, accessToken);
     const properties = PropertiesService.getScriptProperties();
     properties.setProperty("META_ACCESS_TOKEN", longAccessToken);
+
+    // メッセージを表示
+    Browser.msgBox("Metaアプリの長期トークンを登録しました。");
 
     //Logger.log('registerMetaLongToken() end');
 }
@@ -27,11 +30,12 @@ function registerMetaLongToken() {
 // 引数：プロンプトのプロパティキー
 function promptUserInput(promptKey) {
 
+    const properties = PropertiesService.getScriptProperties();
     const prompt = properties.getProperty(promptKey);
     Logger.log(`プロンプト: ${prompt}`);
 
     const input = Browser.inputBox(prompt, Browser.Buttons.OK_CANCEL);
-    Logger.log(`ユーザ入力: ${clientId}`);
+    Logger.log(`ユーザ入力: ${input}`);
 
     if (input == 'cancel') {
         return null;
@@ -45,7 +49,7 @@ function getLongAccessToken(clientId, clientSecret, shortLivedToken) {
     Logger.log('getLongAccessToken(clientId, clientSecret, shortLivedToken) start');
 
     // URLとクエリパラメータの構築
-    const apiVersion = PropertiesService.getScriptProperties().getProperty("API_VERSION");
+    const apiVersion = PropertiesService.getScriptProperties().getProperty("META_API_VERSION");
     const baseUrl = `https://graph.facebook.com/${apiVersion}/oauth/access_token`;
     const queryParams = {
         grant_type: "fb_exchange_token",

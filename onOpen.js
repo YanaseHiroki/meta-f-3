@@ -1,12 +1,7 @@
 // スプレッドシートを開いたときに実行される関数
-function onOpen () {
-    Logger.log('onOpen() start');
-    
-    initializeScriptProperties();   // スクリプトプロパティを初期化
+function onOpen() {
     showSidebar();                  // サイドバーを表示
-    addOriginalMenu();              // カスタムメニューを追加
-
-    Logger.log('onOpen() end');
+    addOriginalMenu();              // カスタムメニューを表示
 }
 
 // サイドバーを表示(sideBar.htmlを読み込む)
@@ -21,7 +16,7 @@ function showSidebar() {
     Logger.log('showSidebar() end');
 }
 
-// カスタムメニューを追加
+// カスタムメニューを表示(「初期設定」)
 function addOriginalMenu() {
     Logger.log('addOriginalMenu() start');
 
