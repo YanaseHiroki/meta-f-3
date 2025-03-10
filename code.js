@@ -16,8 +16,6 @@ function facebook_getCampaign(daySince, dayUntil) {
 
   // https://developers.facebook.com/docs/marketing-api/reference/ad-campaign-group/insights?locale=ja_JP
   var fields = "date_start,date_stop,account_id,account_name,campaign_id,campaign_name,impressions,inline_link_clicks,conversions,spend";
-
-  refreshAccessToken();
   facebook_writeFacebookAdsDataToSheet(sheetName, endpoint, fields, daySince, dayUntil);
 
   // メッセージを表示
@@ -43,9 +41,6 @@ function facebook_getAdSets(daySince, dayUntil) {
 
   // https://developers.facebook.com/docs/marketing-api/reference/ad-campaign/insights?locale=ja_JP  
   var fields = "date_start,date_stop,adset_name,impressions,clicks,ctr,cpc,spend,actions";
-
-  // トークンを更新
-  refreshAccessToken();
 
   // 広告セットを取得
   var adSetsCount = facebook_writeFacebookAdsDataToSheet(sheetName, endpoint, fields, daySince, dayUntil);
@@ -124,7 +119,6 @@ function facebook_getAdSetsForYesterday() {
   var daySince = facebook_getDateNDaysAgo(1); // 開始日
   var dayUntil = facebook_getDateNDaysAgo(1); // 終了日
 
-  refreshAccessToken();
   facebook_writeFacebookAdsDataToSheet(sheetName, endpoint, fields, daySince, dayUntil);
 
   // 運用レポートに広告セットシートのデータを整形して書き込む
@@ -152,9 +146,6 @@ function facebook_getAds(daySince, dayUntil) {
 
   // https://developers.facebook.com/docs/marketing-api/reference/adgroup/insights/
   var fields = "campaign_id,campaign_name,adset_id,adset_name,ad_id,ad_name,impressions,cpm,clicks,ctr,cpc,actions,spend,date_start,date_stop";
-
-  // トークン取得
-  refreshAccessToken();
 
   // 広告シート作成
   facebook_writeFacebookAdsDataToSheet(sheetName, endpoint, fields, daySince, dayUntil);
@@ -314,10 +305,13 @@ function makeOperationReport() {
   console.log("makeOperationReport()");
 
   var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  var spreadsheetId = spreadsheet.getId();
+  console.log(`Spreadsheet ID: ${spreadsheetId}`);
 
   // 広告セットシートを取得
   var adSetSheet = spreadsheet.getSheetByName('広告セット');
   if (!adSetSheet) {
+    console.log('広告セットシートが見つかりません。');
     return;
   }
 
@@ -325,6 +319,7 @@ function makeOperationReport() {
   var operationReportSheetName = '運用レポート';
   var operationReportSheet = spreadsheet.getSheetByName(operationReportSheetName);
   if (!operationReportSheet) {
+    console.log('運用レポートシートが見つかりません。');
     return;
   }
 
@@ -522,37 +517,8 @@ function makeOperationReport() {
 
 // スプレッドシートからアクセストークンを取得する関数
 function facebook_getAccessToken() {
-
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('トークン管理');
-  if (sheet) {
-    return sheet.getRange(1, 1).getValue(); // 1行1列目からトークンを取得
-  } else {
-    Logger.log('シート "トークン管理" が見つかりません。');
-    return null; // シートが見つからなかった場合、nullを返す
-  }
-}
-
-// 「トークン管理」シートにアクセストークンの値を保存する関数
-function saveAccessToken(token) {
-
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('トークン管理');
-  if (sheet) {
-    sheet.getRange(1, 1).setValue(token); // 1行1列目にトークンを保存
-  } else {
-    Logger.log('シート "トークン管理" が見つかりません。');
-  }
-}
-
-// 「トークン管理」シートからアクセストークンの値を取得する関数
-function loadAccessToken() {
-
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('トークン管理');
-  if (sheet) {
-    return sheet.getRange(1, 1).getValue(); // 1行1列目からトークンを取得
-  } else {
-    Logger.log('シート "トークン管理" が見つかりません。');
-    return null; // シートが見つからなかった場合、nullを返す
-  }
+  const properties = PropertiesService.getScriptProperties();
+  return properties.getProperty("META_ACCESS_TOKEN");
 }
 
 // 任意の日数前の日付を計算する共通関数
@@ -565,9 +531,10 @@ function facebook_getDateNDaysAgo(daysAgo) {
 // Facebook Ads APIからデータを取得する汎用関数
 function facebook_getData(endpoint) {
   // Facebook広告アカウントIDとアクセストークンを設定
-  var accessToken = facebook_getAccessToken(); // スプレッドシートからアクセストークンを取得
-  var adAccountId = '1362620894448891'; // Facebook広告アカウントID
-  var apiVersion = 'v22.0'; // 使用するAPIのバージョン
+  const properties = PropertiesService.getScriptProperties();
+  var accessToken = properties.getProperty("META_ACCESS_TOKEN"); // アクセストークンを取得
+  var adAccountId = properties.getProperty("META_AD_ACCOUNT_ID"); // Facebook広告アカウントID
+  var apiVersion = properties.getProperty("META_API_VERSION"); // 使用するAPIのバージョン
 
   // APIのURLを構築
   var apiUrl = `https://graph.facebook.com/${apiVersion}/act_${adAccountId}/${endpoint}`;
@@ -628,8 +595,9 @@ function getFacebookAdsDataForCampaign(campaignId, fields, argDaySince, argDayUn
   console.log(`getFacebookAdsDataForCampaign(${campaignId},${fields},${argDaySince},${argDayUntil})`);
 
   // 必要な変数と設定を準備
-  var apiVersion = 'v22.0';  // APIのバージョン
-  var accessToken = facebook_getAccessToken(); // スプレッドシートからアクセストークンを取得
+  const properties = PropertiesService.getScriptProperties();
+  var apiVersion = properties.getProperty("META_API_VERSION"); // 使用するAPIのバージョン
+  var accessToken = facebook_getAccessToken(); // アクセストークンを取得
 
   // APIリクエスト用のURLを構築
   var apiUrl = `https://graph.facebook.com/${apiVersion}/${campaignId}/insights`;
@@ -690,7 +658,7 @@ function getFacebookAdsDataForCampaign(campaignId, fields, argDaySince, argDayUn
   }
 }
 
-// 取得した広告データをスプレッドシートにキャンペーンごとに書き込む関数
+// データを取得してスプレッドシートに書き込む関数
 function facebook_writeFacebookAdsDataToSheet(sheetName, endpoint, fields, daySince, dayUntil) {
   console.log(`facebook_writeFacebookAdsDataToSheet(${sheetName}, ${endpoint}, ${fields}, ${daySince}, ${dayUntil})`);
 
@@ -709,66 +677,61 @@ function facebook_writeFacebookAdsDataToSheet(sheetName, endpoint, fields, daySi
   // シートを表示
   sheet.activate();
 
-  var lastRow = sheet.getLastRow();  // 最終行を取得
+  // 指定された種類のデータをAPIで取得
+  var data = facebook_getData(endpoint);
 
-  // もしシートにデータがない場合は、最初の行をヘッダーとして設定
-  if (lastRow === 0) {
-    // キャンペーンのデータ構造を取得
-    var campaigns = facebook_getData(endpoint);
-
-    if (!campaigns || campaigns.length === 0) {
-      Logger.log("キャンペーンデータが取得できませんでした。");
-      sheet.getRange(1, 1).setValue("データなし");
-      sheet.getRange(1, 2).setValue(daySince);
-      sheet.getRange(1, 3).setValue(dayUntil);
-      return 0;
-    }
-
-    var firstCampaignData = null;
-    for (var i = 0; i < campaigns.length; i++) {
-      firstCampaignData = getFacebookAdsDataForCampaign(campaigns[i].id, fields, daySince, dayUntil);
-      if (firstCampaignData && firstCampaignData.length > 0) {
-        break;
-      }
-    }
-    if (!firstCampaignData || firstCampaignData.length === 0) {
-      Logger.log("ヘッダーのサンプルデータが取得できませんでした。");
-      sheet.getRange(1, 1).setValue("データなし");
-      sheet.getRange(1, 2).setValue(daySince);
-      sheet.getRange(1, 3).setValue(dayUntil);
-      return 0;
-    }
-
-    var sampleAd = firstCampaignData[0];
-
-    if (!sampleAd || Object.keys(sampleAd).length === 0) {
-      Logger.log("ヘッダーに使用するデータが取得できませんでした。");
-      sheet.getRange(1, 1).setValue("データなし");
-      sheet.getRange(1, 2).setValue(daySince);
-      sheet.getRange(1, 3).setValue(dayUntil);
-      return 0;
-    }
-
-    var header = Object.keys(sampleAd);
-
-    // 広告の場合はヘッダーに画像URLを追加
-    if (endpoint === 'ads') {
-      header.push("image_url");
-    }
-
-    // ヘッダーのactionsをconversionsに変更
-    header = header.map(h => h === 'actions' ? 'conversions' : h);
-
-    sheet.getRange(1, 1, 1, header.length).setValues([header]);
-    lastRow = 1;
+  if (!data || data.length === 0) {
+    Logger.log("データが取得できませんでした。");
+    sheet.getRange(1, 1).setValue("データなし");
+    sheet.getRange(1, 2).setValue(daySince);
+    sheet.getRange(1, 3).setValue(dayUntil);
+    return 0;
   }
+
+  var firstData = null;
+  for (var i = 0; i < data.length; i++) {
+    firstData = getFacebookAdsDataForCampaign(data[i].id, fields, daySince, dayUntil);
+    if (firstData && firstData.length > 0) {
+      break;
+    }
+  }
+  if (!firstData || firstData.length === 0) {
+    Logger.log("ヘッダーのサンプルデータが取得できませんでした。");
+    sheet.getRange(1, 1).setValue("データなし");
+    sheet.getRange(1, 2).setValue(daySince);
+    sheet.getRange(1, 3).setValue(dayUntil);
+    return 0;
+  }
+
+  var sampleAd = firstData[0];
+
+  if (!sampleAd || Object.keys(sampleAd).length === 0) {
+    Logger.log("ヘッダーに使用するデータが取得できませんでした。");
+    sheet.getRange(1, 1).setValue("データなし");
+    sheet.getRange(1, 2).setValue(daySince);
+    sheet.getRange(1, 3).setValue(dayUntil);
+    return 0;
+  }
+
+  var header = Object.keys(sampleAd);
+
+  // 広告の場合はヘッダーに画像URLを追加
+  if (endpoint === 'ads') {
+    header.push("image_url");
+  }
+
+  // ヘッダーのactionsをconversionsに変更
+  header = header.map(h => h === 'actions' ? 'conversions' : h);
+
+  sheet.getRange(1, 1, 1, header.length).setValues([header]);
+  lastRow = 1;
 
   // 書き込むデータを格納する配列
   var dataToWrite = [];
 
   // 各キャンペーンのデータを取得して配列に格納
-  for (var c = 0; c < campaigns.length; c++) {
-    var adsData = getFacebookAdsDataForCampaign(campaigns[c].id, fields, daySince, dayUntil);
+  for (var c = 0; c < data.length; c++) {
+    var adsData = getFacebookAdsDataForCampaign(data[c].id, fields, daySince, dayUntil);
 
     if (adsData && adsData.length > 0) {
       for (var i = 0; i < adsData.length; i++) {
@@ -864,8 +827,9 @@ function facebook_writeFacebookAdsDataToSheet(sheetName, endpoint, fields, daySi
 // 画像URL取得
 function getAdImageUrl(adId) {
   console.log(`getAdImageUrl(${adId})`);
-  var apiVersion = 'v22.0';
-  var accessToken = facebook_getAccessToken();  // 必要に応じてアクセストークンを設定
+  const properties = PropertiesService.getScriptProperties();
+  var apiVersion = properties.getProperty("META_API_VERSION");  // 使用するAPIのバージョン
+  var accessToken = facebook_getAccessToken();  // アクセストークンを取得
   var url = `https://graph.facebook.com/${apiVersion}/${adId}?fields=creative&access_token=${accessToken}`;
 
   // Adオブジェクトから「creative」を取得

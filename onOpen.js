@@ -1,5 +1,5 @@
 // スプレッドシートを開いたときに実行される関数
-function onOpen() {
+function onOpenProcess() {
     showSidebar();                  // サイドバーを表示
     addOriginalMenu();              // カスタムメニューを表示
 }

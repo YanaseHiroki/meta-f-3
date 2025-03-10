@@ -14,11 +14,11 @@ function testDifyChatflowApiFilesAccess() {
 function difyChatflowApiFilesAccess(data) {
 
     // スクリプトプロパティを取得
-    const properties = getScriptPropertiesOrInitialize();
+    const properties = PropertiesService.getScriptProperties();
 
     // ヘッダー情報
     const headers = {
-        'Authorization': "Bearer " + properties.getProperty("DIFY_APP_ID"),  //api key　(1~5個の広告を分析するCF (access url))
+        'Authorization': "Bearer " + properties.getProperty("DIFY_APP_ID"),
         'Content-Type': 'application/json'
     };
 

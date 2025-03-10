@@ -5,7 +5,7 @@ function aSettingAtDay1() {
     
     initializeScriptProperties();   // スクリプトプロパティを初期化
     addTrigger();                   // トリガーを追加
-    onOpen();                       // サイドバーを表示, カスタムメニューを表示
+    onOpenProcess();                // サイドバーを表示, カスタムメニューを表示
     registerMetaLongToken();        // メタアプリのトークンを登録
 
     Logger.log('初期設定を終了します');
@@ -25,6 +25,9 @@ function initializeScriptProperties() {
 
             // MetaアプリのAPIのバージョン
             'META_API_VERSION': 'v22.0',
+
+            // 広告アカウントID
+            'META_AD_ACCOUNT_ID': '1362620894448891',
             
             // Metaアプリの長期トークンを取得してプロパティに登録するモーダルのプロンプト
             'META_APP_ID_PROMPT': 'Metaアプリの長期トークンを登録します。1/3 アプリIDを入力してください。',
@@ -43,7 +46,23 @@ function initializeScriptProperties() {
 
 // トリガーを追加
 function addTrigger() {
+
+    // 既存のトリガーを削除
+    const triggers = ScriptApp.getProjectTriggers();
+    if(triggers) {
+        for (let i = 0; i < triggers.length; i++) {
+            ScriptApp.deleteTrigger(triggers[i]);
+        }
+    }
+
+    // スプレッドシートを開いたときにonOpenProcess()を実行するトリガーを追加
+    ScriptApp.newTrigger('onOpenProcess')
+    .forSpreadsheet(SpreadsheetApp.getActiveSpreadsheet())
+    .onOpen()
+    .create();
         
+    Logger.log('起動時にサイドバーとメニューを表示する処理のトリガーを追加しました');
+
     // 1か月ごとにrefreshAccessToken()を実行するトリガーを追加
     ScriptApp.newTrigger('refreshAccessToken')
     .timeBased()
@@ -51,5 +70,5 @@ function addTrigger() {
     .atHour(5)
     .create();
 
-    Logger.log('長期トークンを自動的に更新するトリガーを追加しました');
+    Logger.log('長期トークンを自動的に更新するためのトリガーを追加しました');
 }

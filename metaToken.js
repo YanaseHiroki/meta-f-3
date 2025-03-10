@@ -18,6 +18,10 @@ function registerMetaLongToken() {
     // 長期アクセストークンを取得
     const longAccessToken = getLongAccessToken(appId, appSecret, accessToken);
     const properties = PropertiesService.getScriptProperties();
+
+    // プロパティに登録
+    properties.setProperty("META_APP_ID", appId);
+    properties.setProperty("META_APP_SECRET", appSecret);
     properties.setProperty("META_ACCESS_TOKEN", longAccessToken);
 
     // メッセージを表示
