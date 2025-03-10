@@ -467,9 +467,9 @@ function makeOperationReport() {
 
       // 広告セット名をN21, Y21, AJ21などに設定
       const adSetNameRange = operationReportSheet.getRange(21, colIndex, 1, 11);
-      adSetNameRange.merge();
       adSetNameRange.setValue(adset_name);
       adSetNameRange.setBackground('#ADD8E6'); // 水色背景
+      adSetNameRange.merge();
 
       // C22:M22をN22:X22, Y22:AI22, AJ22:AT22などにコピー
       const headerRange = operationReportSheet.getRange(22, 3, 1, 11);
