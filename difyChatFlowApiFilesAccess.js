@@ -4,7 +4,7 @@ function testDifyChatflowApiFilesAccess() {
     // Extracting additional parameters from the sheet
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("CRTレポート");
     const data = sheet.getRange("B5:B9").getValues(); // B5:N9の範囲を取得（最大5行）
-    difyChatflowApiFilesAccess(data);
+    difyChatflowApi(data);
 }
 
 

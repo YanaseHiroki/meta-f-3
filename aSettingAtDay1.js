@@ -1,12 +1,12 @@
 // 導入時に手動実行する関数
 
-function day1Setting() {
+function aSettingAtDay1() {
     Logger.log('初期設定を開始します');
     
     initializeScriptProperties();   // スクリプトプロパティを初期化
     addTrigger();                   // トリガーを追加
-
     onOpen();                       // サイドバーを表示, カスタムメニューを表示
+    registerMetaLongToken();        // メタアプリのトークンを登録
 
     Logger.log('初期設定を終了します');
 }

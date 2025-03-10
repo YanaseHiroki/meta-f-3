@@ -289,13 +289,15 @@ function makeCreativeReport() {
       reportSheet.getRange(rowIndex, 16).setValue(ad.row[headers.indexOf('date_stop')]);
     }
 
-    // 広告情報の範囲を取得してdifyChatflowApiを呼び出す
+    // 広告情報の範囲を取得してdifyChatflowApiFilesAccessを呼び出す
     var adDataRange = reportSheet.getRange(startRow + 2, 2, topAds.length, 15).getValues();
-    var answerJson = difyChatflowApi(adDataRange);
+    var answerJson = difyChatflowApiFilesAccess(adDataRange);
     
     // answerJsonの内容をシートに書き込む
-    reportSheet.getRange(startRow + 8, 3).setValue(answerJson.current_status);
-    reportSheet.getRange(startRow + 9, 3).setValue(answerJson.future_implications);
+    if(answerJson) {
+      reportSheet.getRange(startRow + 8, 3).setValue(answerJson.current_status);
+      reportSheet.getRange(startRow + 9, 3).setValue(answerJson.future_implications);
+    }
 
     startRow += 11; // 次の広告セットのために11行下に移動
   }
