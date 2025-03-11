@@ -8,4 +8,4 @@ config.jsにトークンを入れる {cm:2025-03-10}
 べた書きのプロパティを入力させるようにする
 必要なプロパティがなければonOpenProcessで入力させる
 運用レポート記入後、ソートされない
-makeOperationReportでこける
+makeOperationReportでこける {cm:2025-03-11}

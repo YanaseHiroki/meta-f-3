@@ -420,11 +420,17 @@ function makeOperationReport() {
   if (adSetData.length === 0) {
     // 広告セットシートのデータが0行の場合、最終行の次に1列挿入してB列に日付を記入
     if (noDataDate) {
-      operationReportSheet.getRange(existingRow, 2).setValue(noDataDate);
+    const dateCell = operationReportSheet.getRange(existingRow, 2);
+    dateCell.setValue(noDataDate);
+    dateCell.setBackground('#d9d9d9'); // 背景色を#d9d9d9に設定
     }
   } else {
     // 全広告セットの合計値をC列からM列に入れる
     operationReportSheet.getRange(existingRow, 2, 1, totalRow.length).setValues([totalRow]);
+
+  // B列の日付セルの背景色を#d9d9d9に設定
+  const dateCell = operationReportSheet.getRange(existingRow, 2);
+  dateCell.setBackground('#d9d9d9');
 
     // 各項目の形式を指定
     operationReportSheet.getRange(existingRow, 3).setNumberFormat('#,##0'); // impressions
@@ -492,13 +498,13 @@ function makeOperationReport() {
       operationReportSheet.getRange(existingRow, colIndex + 10).setNumberFormat('"¥"#,##0'); // 実CPA
 
       // 罫線を引く
-      const adSetRange = operationReportSheet.getRange(23, 2, existingRow - 22, colIndex + 9);
-      adSetRange.setBorder(true, true, true, true, true, true);
+      const rangeToBorder = operationReportSheet.getRange(21, 2, existingRow - 20, colIndex + 9);
+      rangeToBorder.setBorder(true, true, true, true, true, true);
 
       // 背景色を設定
-      adSetRange.setBackground('#FFFFFF'); // 白色
-      operationReportSheet.getRange(existingRow, colIndex + 7, 1, 1).setBackgroundRGB(252, 228, 214); // 媒体CPA
-      operationReportSheet.getRange(existingRow, colIndex + 10, 1, 1).setBackgroundRGB(252, 228, 214); // 実CPA
+      operationReportSheet.getRange(existingRow, colIndex, 1, 10).setBackground('#FFFFFF'); // 値を入れた範囲を白色
+      operationReportSheet.getRange(existingRow, colIndex + 7, 1, 1).setBackground('#fce4d6'); // 媒体CPAをオレンジ
+      operationReportSheet.getRange(existingRow, colIndex + 10, 1, 1).setBackground('#fce4d6'); // 実CPAをオレンジ
 
       colIndex += 11; // 広告セット同士の間に不要な空の列がないようにする
     }
