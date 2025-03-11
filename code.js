@@ -396,9 +396,11 @@ function makeOperationReport() {
   // 既存のdate_stopをチェック
   let existingRow = -1;
   for (let i = startRow - 1; i < operationReportData.length; i++) {
-    if (operationReportData[i][1] === dateStop) {
-      existingRow = i + 1;
-      break;
+    const formattedDate = Utilities.formatDate(new Date(operationReportData[i][1]), Session.getScriptTimeZone(), 'yyyy-MM-dd');
+    Logger.log(`formattedDate: ${formattedDate}, dateStop: ${dateStop}`);
+    if (formattedDate === dateStop) {
+      console.log(`Date ${dateStop} already exists in the report. Skipping.`);
+      return; // 日付が既に存在する場合は処理をスキップ
     }
   }
 
@@ -511,9 +513,14 @@ function makeOperationReport() {
   }
 
   // データをB列の値の昇順にソート
-  const rangeToSort = operationReportSheet.getRange(23, 2, existingRow - 22, operationReportSheet.getLastColumn());
-  rangeToSort.sort({ column: 2, ascending: true });
-
+  const rangeToSort = operationReportSheet.getRange(23, 2, operationReportSheet.getLastRow() - 22, operationReportSheet.getLastColumn() - 1);
+  const sortedData = rangeToSort.getValues().sort((a, b) => {
+    const dateA = new Date(a[0]);
+    const dateB = new Date(b[0]);
+    return dateA - dateB;
+  });
+  rangeToSort.setValues(sortedData);
+  
   // シートを表示
   operationReportSheet.activate();
 

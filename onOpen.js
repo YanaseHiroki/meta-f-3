@@ -1,3 +1,12 @@
+// ファイルを開いたときにApps Scriptのリンクを表示(開発用)
+function showScriptDialog() {
+var scriptId = ScriptApp.getScriptId();
+var url = "https://script.google.com/d/" + scriptId + "/edit";
+var html = '<button onclick="window.open(\'' + url + '\', \'_blank\'); google.script.host.close();"><br> <br> Apps Scriptを開く <br> く<br> </button>';
+var userInterface = HtmlService.createHtmlOutput(html).setWidth(300).setHeight(100);
+SpreadsheetApp.getUi().showModalDialog(userInterface, "Apps Script");
+}
+
 // スプレッドシートを開いたときに実行される関数
 function onOpenProcess() {
     showSidebar();                  // サイドバーを表示
