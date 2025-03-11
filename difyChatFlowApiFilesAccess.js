@@ -11,7 +11,7 @@ function testDifyChatflowApiFilesAccess() {
 // Difyの「1~5個の広告を分析するCF (access url)」にAPIで接続する
 // DifyのワークフローにAPIで接続する
 // 接続先：1つの広告を分析するWF
-function difyChatflowApiFilesAccess(data) {
+function difyChatflowApiFilesAccess(data, adSetName) {
 
     // スクリプトプロパティを取得
     const properties = PropertiesService.getScriptProperties();
@@ -55,6 +55,7 @@ function difyChatflowApiFilesAccess(data) {
     const payload = JSON.stringify({
         "user": "gas-difyChatflowApi",
         'response_mode': 'blocking',
+        'conversation_id': searchAdSetMapFromScriptProperties(adSetName),
         'inputs': {
             "adds": addsForPayloard,
         },
@@ -82,6 +83,9 @@ function difyChatflowApiFilesAccess(data) {
         const answerJson = JSON.parse(responseJson.answer);
         const conversationId = responseJson.conversation_id;
 
+        // スクリプトプロパティのMapにconversationIdと広告セット名を追加
+        addAdSetMapToScriptProperties(conversationId, adSetName);
+
         Logger.log('会話ID: ' + conversationId);
         Logger.log('現状整理: ' + answerJson.current_status);
         Logger.log('今後の示唆: ' + answerJson.future_implications);
@@ -94,4 +98,36 @@ function difyChatflowApiFilesAccess(data) {
 
         Logger.log("difyChatflowApi Error Code: " + response.getResponseCode());
     }
+}
+
+// スクリプトプロパティのconversationAdSetMapに追加する関数
+function addAdSetMapToScriptProperties(conversationId, adSetName) {
+    const properties = PropertiesService.getScriptProperties();
+    const conversationAdSetMap = JSON.parse(properties.getProperty("conversationAdSetMap"));
+    conversationAdSetMap[adSetName] = conversationId;
+    properties.setProperty("conversationAdSetMap", JSON.stringify(conversationAdSetMap));
+    Logger.log('set conversationAdSetMap: ' + JSON.stringify(conversationAdSetMap));
+}
+
+// スクリプトプロパティのconversationAdSetMapを検索する関数
+function searchAdSetMapFromScriptProperties(adSetName) {
+    const properties = PropertiesService.getScriptProperties();
+
+    // スクリプトプロパティのconversationAdSetMapが存在しない場合は空文字を返す
+    const conversationAdSetString = properties.getProperty("conversationAdSetMap");
+    if(!conversationAdSetString) {
+        Logger.log('conversationAdSetMap is not found in script properties');
+        return "";
+    }
+
+    // スクリプトプロパティのconversationAdSetMap
+    const conversationAdSetMap = JSON.parse(conversationAdSetString);
+    const conversationId = conversationAdSetMap[adSetName];
+    if(!conversationId) {
+        Logger.log('conversationId for adSetName is not found');
+        return "";
+    }
+
+    Logger.log('searched conversationId: ' + conversationId);
+    return conversationId;
 }
