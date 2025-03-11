@@ -191,6 +191,7 @@ function makeCreativeReport() {
   var data = adSheet.getDataRange().getValues();
   var headers = data[0];
   var adSetIndex = headers.indexOf('adset_name');
+  var adSetIdIndex = headers.indexOf('adset_id');
   var adNameIndex = headers.indexOf('ad_name');
   var conversionIndex = headers.indexOf('conversions');
   var spendIndex = headers.indexOf('spend');
@@ -207,15 +208,19 @@ function makeCreativeReport() {
   for (var i = 1; i < data.length; i++) {
     var row = data[i];
     var adSetName = row[adSetIndex];
+    var adSetId = row[adSetIdIndex];
     var adName = row[adNameIndex];
     var conversion = parseFloat(row[conversionIndex]) || 0;
     var spend = parseFloat(row[spendIndex]) || 0;
 
-    if (!adSets[adSetName]) {
-      adSets[adSetName] = [];
+    if (!adSets[adSetId]) {
+      adSets[adSetId] = {
+        adSetName: adSetName,
+        ads: []
+      };
     }
 
-    adSets[adSetName].push({
+    adSets[adSetId].ads.push({
       adName: adName,
       conversion: conversion,
       spend: spend,
@@ -226,8 +231,9 @@ function makeCreativeReport() {
 
   var startRow = 3; // 最初のデータ行は3行目から開始
 
-  for (var adSetName in adSets) {
-    var ads = adSets[adSetName];
+  for (var adSetId in adSets) {
+    var adSet = adSets[adSetId];
+    var ads = adSet.ads;
 
     // conversions、spendのトップ5を取得
     ads.sort(function (a, b) {
@@ -251,7 +257,7 @@ function makeCreativeReport() {
     reportSheet.setRowHeight(startRow + 9, 42); // 10行目の高さを42に設定
 
     // 広告セット名を設定
-    reportSheet.getRange(startRow, 2).setValue(adSetName);
+    reportSheet.getRange(startRow, 2).setValue(adSet.adSetName);
 
     // 広告名とデータを設定
     for (var j = 0; j < topAds.length; j++) {
@@ -282,7 +288,7 @@ function makeCreativeReport() {
 
     // 広告情報の範囲を取得してdifyChatflowApiFilesAccessを呼び出す
     var adDataRange = reportSheet.getRange(startRow + 2, 2, topAds.length, 15).getValues();
-    var answerJson = difyChatflowApiFilesAccess(adDataRange, adSetName);
+    var answerJson = difyChatflowApiFilesAccess(adDataRange, adSetId);
     
     // answerJsonの内容をシートに書き込む
     if(answerJson) {

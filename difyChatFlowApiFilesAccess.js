@@ -11,7 +11,7 @@ function testDifyChatflowApiFilesAccess() {
 // Difyの「1~5個の広告を分析するCF (access url)」にAPIで接続する
 // DifyのワークフローにAPIで接続する
 // 接続先：1つの広告を分析するWF
-function difyChatflowApiFilesAccess(data, adSetName) {
+function difyChatflowApiFilesAccess(data, adSetId) {
 
     // スクリプトプロパティを取得
     const properties = PropertiesService.getScriptProperties();
@@ -55,7 +55,7 @@ function difyChatflowApiFilesAccess(data, adSetName) {
     const payload = JSON.stringify({
         "user": "gas-difyChatflowApi",
         'response_mode': 'blocking',
-        'conversation_id': searchAdSetMapFromScriptProperties(adSetName),
+        'conversation_id': searchAdSetMapFromScriptProperties(adSetId),
         'inputs': {
             "adds": addsForPayloard,
         },
@@ -84,7 +84,7 @@ function difyChatflowApiFilesAccess(data, adSetName) {
         const conversationId = responseJson.conversation_id;
 
         // スクリプトプロパティのMapにconversationIdと広告セット名を追加
-        addAdSetMapToScriptProperties(conversationId, adSetName);
+        addAdSetMapToScriptProperties(conversationId, adSetId);
 
         Logger.log('会話ID: ' + conversationId);
         Logger.log('現状整理: ' + answerJson.current_status);
@@ -101,33 +101,46 @@ function difyChatflowApiFilesAccess(data, adSetName) {
 }
 
 // スクリプトプロパティのconversationAdSetMapに追加する関数
-function addAdSetMapToScriptProperties(conversationId, adSetName) {
+function addAdSetMapToScriptProperties(conversationId, adSetId) {
     const properties = PropertiesService.getScriptProperties();
-    const conversationAdSetMap = JSON.parse(properties.getProperty("conversationAdSetMap"));
-    conversationAdSetMap[adSetName] = conversationId;
+    let conversationAdSetMap = properties.getProperty("conversationAdSetMap");
+
+    // Initialize conversationAdSetMap if it does not exist
+    if (!conversationAdSetMap) {
+        conversationAdSetMap = {};
+    } else {
+        conversationAdSetMap = JSON.parse(conversationAdSetMap);
+    }
+
+    conversationAdSetMap[adSetId] = conversationId;
     properties.setProperty("conversationAdSetMap", JSON.stringify(conversationAdSetMap));
     Logger.log('set conversationAdSetMap: ' + JSON.stringify(conversationAdSetMap));
 }
 
 // スクリプトプロパティのconversationAdSetMapを検索する関数
-function searchAdSetMapFromScriptProperties(adSetName) {
+function searchAdSetMapFromScriptProperties(adSetId) {
     const properties = PropertiesService.getScriptProperties();
 
     // スクリプトプロパティのconversationAdSetMapが存在しない場合は空文字を返す
-    const conversationAdSetString = properties.getProperty("conversationAdSetMap");
-    if(!conversationAdSetString) {
+    let conversationAdSetMap = properties.getProperty("conversationAdSetMap");
+    if (!conversationAdSetMap) {
         Logger.log('conversationAdSetMap is not found in script properties');
         return "";
+    } else {
+        Logger.log('got conversationAdSetMap to search from: ' + conversationAdSetMap);
+        
+        // スクリプトプロパティのconversationAdSetMapをJSONオブジェクトに変換
+        conversationAdSetMap = JSON.parse(conversationAdSetMap);
     }
 
-    // スクリプトプロパティのconversationAdSetMap
-    const conversationAdSetMap = JSON.parse(conversationAdSetString);
-    const conversationId = conversationAdSetMap[adSetName];
-    if(!conversationId) {
-        Logger.log('conversationId for adSetName is not found');
+    // adSetIdに対応するconversationIdを取得
+    const conversationId = conversationAdSetMap[adSetId];
+    if (!conversationId) {
+        Logger.log('conversationId for adSetId is not found');
         return "";
     }
 
-    Logger.log('searched conversationId: ' + conversationId);
+    Logger.log('found conversationId for adSetId is: ' + conversationId);
     return conversationId;
 }
+

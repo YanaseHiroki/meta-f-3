@@ -2,8 +2,8 @@
 function showScriptDialog() {
 var scriptId = ScriptApp.getScriptId();
 var url = "https://script.google.com/d/" + scriptId + "/edit";
-var html = '<button onclick="window.open(\'' + url + '\', \'_blank\'); google.script.host.close();"><br> <br> Apps Scriptを開く <br> く<br> </button>';
-var userInterface = HtmlService.createHtmlOutput(html).setWidth(300).setHeight(100);
+var html = '<button onclick="window.open(\'' + url + '\', \'_blank\'); google.script.host.close();"><h1>Apps Script 開く</h1></button>';
+var userInterface = HtmlService.createHtmlOutput(html).setWidth(300).setHeight(250);
 SpreadsheetApp.getUi().showModalDialog(userInterface, "Apps Script");
 }
 
