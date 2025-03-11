@@ -397,6 +397,9 @@ function makeOperationReport() {
   let existingRow = -1;
   for (let i = startRow - 1; i < operationReportData.length; i++) {
     const formattedDate = Utilities.formatDate(new Date(operationReportData[i][1]), Session.getScriptTimeZone(), 'yyyy-MM-dd');
+    if (formattedDate === '1970-01-01') {
+      continue;
+    }
     Logger.log(`formattedDate: ${formattedDate}, dateStop: ${dateStop}`);
     if (formattedDate === dateStop) {
       console.log(`Date ${dateStop} already exists in the report. Skipping.`);
@@ -425,6 +428,7 @@ function makeOperationReport() {
     const dateCell = operationReportSheet.getRange(existingRow, 2);
     dateCell.setValue(noDataDate);
     dateCell.setBackground('#d9d9d9'); // 背景色を#d9d9d9に設定
+      dateStop = noDataDate; // dateStopにA3の値を代入
     }
   } else {
     // 全広告セットの合計値をC列からM列に入れる
@@ -520,7 +524,7 @@ function makeOperationReport() {
     return dateA - dateB;
   });
   rangeToSort.setValues(sortedData);
-  
+
   // シートを表示
   operationReportSheet.activate();
 
