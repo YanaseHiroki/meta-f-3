@@ -11,7 +11,7 @@ function testDifyChatflowApiFilesAccess() {
 // Difyの「1~5個の広告を分析するCF (access url)」にAPIで接続する
 // DifyのワークフローにAPIで接続する
 // 接続先：1つの広告を分析するWF
-function difyChatflowApiFilesAccess(data, adSetId) {
+function difyChatflowApiFilesAccess(data, adSetId, adSetName) {
 
     // スクリプトプロパティを取得
     const properties = PropertiesService.getScriptProperties();
@@ -52,10 +52,13 @@ function difyChatflowApiFilesAccess(data, adSetId) {
     const addsForPayloard = JSON.stringify(addArr);
     Logger.log('addsForPayloard: ' + addsForPayloard);
 
+    const conversationId = getConversationId(adSetId) || "";
+    Logger.log('取得した会話ID: ' + conversationId + ' adSetId: ' + adSetId);
+
     const payload = JSON.stringify({
         "user": "gas-difyChatflowApi",
         'response_mode': 'blocking',
-        'conversation_id': searchAdSetMapFromScriptProperties(adSetId),
+        'conversation_id': conversationId,
         'inputs': {
             "adds": addsForPayloard,
         },
@@ -81,12 +84,12 @@ function difyChatflowApiFilesAccess(data, adSetId) {
     if (response.getResponseCode() === 200) {
     const responseJson = JSON.parse(responseText);
         const answerJson = JSON.parse(responseJson.answer);
-        const conversationId = responseJson.conversation_id;
+        const newConversationId = responseJson.conversation_id;
 
-        // スクリプトプロパティのMapにconversationIdと広告セット名を追加
-        addAdSetMapToScriptProperties(conversationId, adSetId);
+        // 会話IDを「会話ID管理」シートに保存
+        saveConversationId(adSetName, adSetId, newConversationId);
 
-        Logger.log('会話ID: ' + conversationId);
+        Logger.log('会話ID: ' + newConversationId);
         Logger.log('現状整理: ' + answerJson.current_status);
         Logger.log('今後の示唆: ' + answerJson.future_implications);
         Logger.log('画像情報: ' + answerJson.img_info);
@@ -100,47 +103,34 @@ function difyChatflowApiFilesAccess(data, adSetId) {
     }
 }
 
-// スクリプトプロパティのconversationAdSetMapに追加する関数
-function addAdSetMapToScriptProperties(conversationId, adSetId) {
-    const properties = PropertiesService.getScriptProperties();
-    let conversationAdSetMap = properties.getProperty("conversationAdSetMap");
-
-    // Initialize conversationAdSetMap if it does not exist
-    if (!conversationAdSetMap) {
-        conversationAdSetMap = {};
-    } else {
-        conversationAdSetMap = JSON.parse(conversationAdSetMap);
+// 会話IDを「会話ID管理」シートに保存する関数
+function saveConversationId(adSetName, adSetId, conversationId) {
+    var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = spreadsheet.getSheetByName('会話ID管理');
+    
+    if (!sheet) {
+      sheet = spreadsheet.insertSheet('会話ID管理');
+      sheet.appendRow(['作成日時', '広告セット名', '広告セットID', '会話ID']);
     }
-
-    conversationAdSetMap[adSetId] = conversationId;
-    properties.setProperty("conversationAdSetMap", JSON.stringify(conversationAdSetMap));
-    Logger.log('set conversationAdSetMap: ' + JSON.stringify(conversationAdSetMap));
-}
-
-// スクリプトプロパティのconversationAdSetMapを検索する関数
-function searchAdSetMapFromScriptProperties(adSetId) {
-    const properties = PropertiesService.getScriptProperties();
-
-    // スクリプトプロパティのconversationAdSetMapが存在しない場合は空文字を返す
-    let conversationAdSetMap = properties.getProperty("conversationAdSetMap");
-    if (!conversationAdSetMap) {
-        Logger.log('conversationAdSetMap is not found in script properties');
-        return "";
-    } else {
-        Logger.log('got conversationAdSetMap to search from: ' + conversationAdSetMap);
-        
-        // スクリプトプロパティのconversationAdSetMapをJSONオブジェクトに変換
-        conversationAdSetMap = JSON.parse(conversationAdSetMap);
+  
+    var now = new Date();
+    sheet.appendRow([now, adSetName, adSetId, conversationId]);
+  }
+  
+  // 広告セットIDに対応する会話IDを取得する関数
+  function getConversationId(adSetId) {
+    var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = spreadsheet.getSheetByName('会話ID管理');
+    
+    if (!sheet) {
+      return null;
     }
-
-    // adSetIdに対応するconversationIdを取得
-    const conversationId = conversationAdSetMap[adSetId];
-    if (!conversationId) {
-        Logger.log('conversationId for adSetId is not found');
-        return "";
+  
+    var data = sheet.getDataRange().getValues();
+    for (var i = 1; i < data.length; i++) {
+      if (data[i][2] === adSetId) {
+        return data[i][3];
+      }
     }
-
-    Logger.log('found conversationId for adSetId is: ' + conversationId);
-    return conversationId;
-}
-
+    return null;
+  }

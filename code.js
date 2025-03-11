@@ -288,7 +288,7 @@ function makeCreativeReport() {
 
     // 広告情報の範囲を取得してdifyChatflowApiFilesAccessを呼び出す
     var adDataRange = reportSheet.getRange(startRow + 2, 2, topAds.length, 15).getValues();
-    var answerJson = difyChatflowApiFilesAccess(adDataRange, adSetId);
+    var answerJson = difyChatflowApiFilesAccess(adDataRange, adSetId, adSet.adSetName);
     
     // answerJsonの内容をシートに書き込む
     if(answerJson) {
@@ -889,4 +889,3 @@ function getAdImageUrl(adId) {
   console.log(`getAdImageUrl 終了（返却値: null`);
   return null;
 }
-
