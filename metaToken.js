@@ -37,6 +37,9 @@ function promptUserInput(promptKey) {
     const properties = PropertiesService.getScriptProperties();
     const prompt = properties.getProperty(promptKey);
     Logger.log(`プロンプト: ${prompt}`);
+    if (!prompt) {
+        throw new Error(`プロンプトが見つかりません: ${promptKey}`);
+    }
 
     const input = Browser.inputBox(prompt, Browser.Buttons.OK_CANCEL);
     Logger.log(`ユーザ入力: ${input}`);

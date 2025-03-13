@@ -12,6 +12,7 @@ function onOpenProcess() {
     showSidebar();                  // サイドバーを表示
     addOriginalMenu();              // カスタムメニューを表示
     showScriptDialog();             // Apps Scriptのリンクを表示【開発用】
+    checkScriptProperties();        // スクリプトプロパティのチェック
 }
 
 // サイドバーを表示(sideBar.htmlを読み込む)
@@ -40,4 +41,46 @@ function addOriginalMenu() {
         // .addSeparator() // セパレーター追加
 
     Logger.log('addOriginalMenu() end');
+}
+
+
+// スクリプトプロパティが設定されているかどうかをチェックする関数
+function checkScriptProperties() {
+
+    // 必要なスクリプトプロパティのキーの配列
+    var requiredKeys = 
+        [
+            'META_API_VERSION',
+            'DIFY_APP_ID',
+            'META_AD_ACCOUNT_ID',
+            'META_APP_ID',
+            'META_APP_SECRET',
+            'META_ACCESS_TOKEN'
+        ];
+
+    var scriptProperties = PropertiesService.getScriptProperties();
+    var allKeysSet = true;
+
+    // 必要なスクリプトプロパティが設定されているかどうかをチェック
+    requiredKeys.forEach(function(key) {
+        var value = scriptProperties.getProperty(key);
+
+        // スクリプトプロパティが設定されていない場合、ユーザに入力してもらう
+        if (!value) {
+            value = promptUserInput(key + '_PROMPT');
+            if (value) {
+                scriptProperties.setProperty(key, value);
+            } else {
+                Logger.log('Missing script property: ' + key);
+                allKeysSet = false;
+            }
+        }
+    });
+
+    // すべてのスクリプトプロパティが設定されているかどうかをログに出力
+    if (allKeysSet) {
+        Logger.log('All required script properties are set.');
+    } else {
+        Logger.log('Some required script properties are missing.');
+    }
 }
