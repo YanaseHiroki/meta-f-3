@@ -26,7 +26,7 @@ function showSidebar() {
     Logger.log('showSidebar() end');
 }
 
-// カスタムメニューを表示(「初期設定」)
+// カスタムメニュー「初期設定」を表示
 function addOriginalMenu() {
     Logger.log('addOriginalMenu() start');
 

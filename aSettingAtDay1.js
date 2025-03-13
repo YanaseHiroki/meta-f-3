@@ -11,28 +11,35 @@ function aSettingAtDay1() {
     Logger.log('初期設定を終了します');
 }
 
-// スクリプトプロパティを取得する関数
+// スクリプトプロパティを設定する関数
 function initializeScriptProperties() {
     
-    // スクリプトプロパティを取得
+    // スクリプトプロパティサービスを取得
     const properties = PropertiesService.getScriptProperties();
     
     // 各種プロパティの値を設定する(初回は追加、2回目以降は更新)
         properties.setProperties({
-            
-            // DifyのアプリケーションID
-            'DIFY_APP_ID': 'app-R2f9xzr4VeznYFxX4fagkQGl', // 1~5個の広告を分析するCF (access url)
 
             // MetaアプリのAPIのバージョン
             'META_API_VERSION': 'v22.0',
+            'META_API_VERSION_PROMPT': 'MetaアプリのAPIのバージョンを入力してください。',
+            
+            // DifyのアプリケーションID
+            'DIFY_APP_ID': 'app-R2f9xzr4VeznYFxX4fagkQGl', // 1~5個の広告を分析するCF (access url)
+            'DIFY_APP_ID_PROMPT': 'DifyのアプリケーションIDを入力してください。',
 
             // 広告アカウントID
             'META_AD_ACCOUNT_ID': '1362620894448891',
+            'META_AD_ACCOUNT_ID_PROMPT': 'Metaの広告アカウントIDを入力してください。',
             
-            // Metaアプリの長期トークンを取得してプロパティに登録するモーダルのプロンプト
-            'META_APP_ID_PROMPT': 'Metaアプリの長期トークンを登録します。1/3 アプリIDを入力してください。',
-            'META_APP_SECRET_PROMPT': '2/3 app secretを入力してください。',
-            'META_ACCESS_TOKEN_PROMPT': '3/3 ads_readを持つアクセストークンを入力してください。',
+            // MetaアプリのアプリID
+            'META_APP_ID_PROMPT': 'MetaアプリのアプリIDを入力してください。',
+
+            // Metaアプリのapp secret
+            'META_APP_SECRET_PROMPT': 'Metaアプリのapp secretを入力してください。',
+
+            // Metaアプリのアクセストークン
+            'META_ACCESS_TOKEN_PROMPT': 'Metaアプリのアクセストークンを入力してください(ads_read権限が必要です)。',
         });
 }
 
@@ -80,6 +87,4 @@ function addTrigger() {
         .create();
 
     Logger.log('長期トークンを自動的に更新するためのトリガーを追加しました');
-
-    
 }
