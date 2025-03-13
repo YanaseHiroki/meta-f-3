@@ -11,6 +11,7 @@ SpreadsheetApp.getUi().showModalDialog(userInterface, "Apps Script");
 function onOpenProcess() {
     showSidebar();                  // サイドバーを表示
     addOriginalMenu();              // カスタムメニューを表示
+    showScriptDialog();             // Apps Scriptのリンクを表示【開発用】
 }
 
 // サイドバーを表示(sideBar.htmlを読み込む)

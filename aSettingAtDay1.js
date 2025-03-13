@@ -57,18 +57,29 @@ function addTrigger() {
 
     // スプレッドシートを開いたときにonOpenProcess()を実行するトリガーを追加
     ScriptApp.newTrigger('onOpenProcess')
-    .forSpreadsheet(SpreadsheetApp.getActiveSpreadsheet())
-    .onOpen()
-    .create();
+        .forSpreadsheet(SpreadsheetApp.getActiveSpreadsheet())
+        .onOpen()
+        .create();
         
     Logger.log('起動時にサイドバーとメニューを表示する処理のトリガーを追加しました');
 
     // 1か月ごとにrefreshAccessToken()を実行するトリガーを追加
     ScriptApp.newTrigger('refreshAccessToken')
-    .timeBased()
-    .onMonthDay(1)
-    .atHour(5)
-    .create();
+        .timeBased()
+        .onMonthDay(1)
+        .atHour(5)
+        .create();
+
+    Logger.log('1か月ごとにrefreshAccessToken()を実行するトリガーを追加しました');
+
+    // 毎日午前5時にfacebook_getAdSetsForYesterday()を実行するトリガーを追加
+    ScriptApp.newTrigger('facebook_getAdSetsForYesterday')
+        .timeBased()
+        .everyDays(1)
+        .atHour(5)
+        .create();
 
     Logger.log('長期トークンを自動的に更新するためのトリガーを追加しました');
+
+    
 }
