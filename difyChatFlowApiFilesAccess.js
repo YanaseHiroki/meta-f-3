@@ -1,4 +1,4 @@
-// 　1つ目の広告情報を取得する(動作確認用)
+// 　1つ目の広告情報を取得する(動作確認用の関数)
 function testDifyChatflowApiFilesAccess() {
 
     // Extracting additional parameters from the sheet
