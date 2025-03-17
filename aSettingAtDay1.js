@@ -2,11 +2,11 @@
 
 function aSettingAtDay1() {
     Logger.log('初期設定を開始します');
-    
+     
     initializeScriptProperties();   // スクリプトプロパティを初期化
     addTrigger();                   // トリガーを追加
     onOpenProcess();                // サイドバーを表示, カスタムメニューを表示
-    registerMetaLongToken();        // メタアプリのトークンを登録
+    refreshAccessToken();           // 長期トークンを取得
 
     Logger.log('初期設定を終了します');
 }
@@ -29,7 +29,6 @@ function initializeScriptProperties() {
             'DIFY_APP_ID_PROMPT': 'DifyのアプリケーションIDを入力してください。',
 
             // 広告アカウントID
-            'META_AD_ACCOUNT_ID': '1362620894448891',
             'META_AD_ACCOUNT_ID_PROMPT': 'Metaの広告アカウントIDを入力してください。',
             
             // MetaアプリのアプリID

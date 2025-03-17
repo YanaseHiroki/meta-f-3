@@ -92,7 +92,6 @@ function getLongAccessToken(clientId, clientSecret, shortLivedToken) {
             }
 
             // 新しいトークンを保存
-            saveAccessToken(newToken);
             Logger.log("新しいトークンを取得しました: " + newToken);
             return newToken;
         } else {
