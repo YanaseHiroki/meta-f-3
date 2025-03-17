@@ -11,7 +11,7 @@ function aSettingAtDay1() {
     Logger.log('初期設定を終了します');
 }
 
-// スクリプトプロパティを設定する関数
+// スクリプトプロパティの初期値を設定する関数
 function initializeScriptProperties() {
     
     // スクリプトプロパティサービスを取得

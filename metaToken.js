@@ -1,53 +1,34 @@
+// 【定期実行用】長期アクセストークンを更新する関数
+function refreshAccessToken() {
+    Logger.log('refreshAccessToken() start');
 
-// Metaアプリの長期トークンを取得してプロパティに登録する関数
-function registerMetaLongToken() {
-    //Logger.log('registerMetaLongToken() start');
-
-    // クライアントIDを入力してもらう
-    const appId = promptUserInput("META_APP_ID_PROMPT");
-    if (!appId) return;
-
-    // クライアントシークレットを入力してもらう
-    const appSecret = promptUserInput("META_APP_SECRET_PROMPT");
-    if (!appSecret) return;
-
-    // 短期アクセストークンを入力してもらう
-    const accessToken = promptUserInput("META_ACCESS_TOKEN_PROMPT");
-    if (!accessToken) return;
-
-    // 長期アクセストークンを取得
-    const longAccessToken = getLongAccessToken(appId, appSecret, accessToken);
+    // 更新前のトークンを取得
     const properties = PropertiesService.getScriptProperties();
+    const currentToken = properties.getProperty("META_ACCESS_TOKEN");
 
-    // プロパティに登録
-    properties.setProperty("META_APP_ID", appId);
-    properties.setProperty("META_APP_SECRET", appSecret);
-    properties.setProperty("META_ACCESS_TOKEN", longAccessToken);
-
-    // メッセージを表示
-    Browser.msgBox("Metaアプリの長期トークンを登録しました。");
-
-    //Logger.log('registerMetaLongToken() end');
-}
-
-// ユーザ入力を取得する関数
-// 引数：プロンプトのプロパティキー
-function promptUserInput(promptKey) {
-
-    const properties = PropertiesService.getScriptProperties();
-    const prompt = properties.getProperty(promptKey);
-    Logger.log(`プロンプト: ${prompt}`);
-    if (!prompt) {
-        throw new Error(`プロンプトが見つかりません: ${promptKey}`);
+    // トークンが取得できない場合はエラー
+    if (!currentToken) {
+        const errorMessage = "更新前のトークンが取得できませんでした。";
+        Logger.log(errorMessage);
+        throw new Error(errorMessage);
     }
 
-    const input = Browser.inputBox(prompt, Browser.Buttons.OK_CANCEL);
-    Logger.log(`ユーザ入力: ${input}`);
+    // トークンを更新
+    const appId = properties.getProperty("META_APP_ID");
+    const appSecret = properties.getProperty("META_APP_SECRET");
+    const newToken = getLongAccessToken(appId, appSecret, currentToken);
 
-    if (input == 'cancel') {
-        return null;
+    // 更新後のトークンが取得できない場合はエラー
+    if (!newToken) {
+        const errorMessage = "更新後のトークンが取得できませんでした。";
+        Logger.log(errorMessage);
+        throw new Error(errorMessage);
     }
-    return input;
+
+    // トークンを保存
+    properties.setProperty("META_ACCESS_TOKEN", newToken);
+
+    Logger.log('refreshAccessToken() end');
 }
 
 // 長期アクセストークンを取得する関数
@@ -109,35 +90,22 @@ function getLongAccessToken(clientId, clientSecret, shortLivedToken) {
     }
 }
 
-// 【定期実行用】長期アクセストークンを更新する関数
-function refreshAccessToken() {
-    Logger.log('refreshAccessToken() start');
+// ユーザ入力を取得する関数
+// 引数：プロンプトのプロパティキー
+function promptUserInput(promptKey) {
 
-    // 更新前のトークンを取得
     const properties = PropertiesService.getScriptProperties();
-    const currentToken = properties.getProperty("META_ACCESS_TOKEN");
-
-    // トークンが取得できない場合はエラー
-    if (!currentToken) {
-        const errorMessage = "更新前のトークンが取得できませんでした。";
-        Logger.log(errorMessage);
-        throw new Error(errorMessage);
+    const prompt = properties.getProperty(promptKey);
+    Logger.log(`プロンプト: ${prompt}`);
+    if (!prompt) {
+        throw new Error(`プロンプトが見つかりません: ${promptKey}`);
     }
 
-    // トークンを更新
-    const appId = properties.getProperty("META_APP_ID");
-    const appSecret = properties.getProperty("META_APP_SECRET");
-    const newToken = getLongAccessToken(appId, appSecret, currentToken);
+    const input = Browser.inputBox(prompt, Browser.Buttons.OK_CANCEL);
+    Logger.log(`ユーザ入力: ${input}`);
 
-    // 更新後のトークンが取得できない場合はエラー
-    if (!newToken) {
-        const errorMessage = "更新後のトークンが取得できませんでした。";
-        Logger.log(errorMessage);
-        throw new Error(errorMessage);
+    if (input == 'cancel') {
+        return null;
     }
-
-    // トークンを保存
-    properties.setProperty("META_ACCESS_TOKEN", newToken);
-
-    Logger.log('refreshAccessToken() end');
+    return input;
 }
