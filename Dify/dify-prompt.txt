@@ -1,29 +1,201 @@
 ```xml
 <instruction>
-    1. 受け取った広告名（{{ad_name}}）、画像URL（{{image_url}}）、および広告結果（{{cost_gross}}、{{cost_net}}、{{imp}}、{{cpm}}、{{click}}、{{ctr}}、{{cpc}}、{{cv}}、{{cvr}}、{{cpa}}）を分析します。
-    2. 現状の広告パフォーマンスを整理し、各指標の意味を説明します。
-    3. 現状の分析に基づいて、今後の改善点や戦略的示唆を提供します。
-    4. 出力は「現状整理」と「今後の示唆」の2つを1文で記述してください。
-    5. 出力にはXMLタグを含めないでください。
+    <instructions>
+        1. 受け取った広告のJSON配列{{#1741174285749.adds#}}の情報を分析します。各配列要素には広告名(ad_name)、消費金額(spend)、インプレッション数(impression)、CPM(cpm)、クリック数(click)、CTR(ctr)、CPC(cpc)、コンバージョン数(conversion)、コンバージョン率(cvr)、CPA(cpa)の値が含まれています。ただし算出不能な項目の値は0になっています。ビジョンで受け取る画像配列filesも合わせて分析します。画像のリストoutputとJSON配列addsの要素の順番は対応しているため、広告画像の内容と各種指標を合わせて分析します。
+        2. 画像の内容と各種指標をもとに現状の分析をして、さらに今後の改善点や戦略的示唆を提供します。
+        3. 出力は「現状整理」と「今後の示唆」と「各画像の情報」をそれぞれ文章で記述します。1つ1つの広告について詳細に説明します。ただし「各画像の情報」では画像の枚数と、1つ1つの画像に埋め込まれた文字や広告としての特徴を詳細に説明します。
+        4. 出力にはXMLタグを含めないでJSON形式にします。
+    </instructions>
+    <examples>
+        <example>
+            <input>
+                ads:[{"ad_name":"BT_興味関心_ALL_046_LinkAd_st_po_241210_ank2","spend":338557,"impression":185574,"cpm":2606.2533390607364,"click":1320,"ctr":0.0071130654078696365,"cpc":366.40367965367966,"conversion":33,"cvr":0.025,"cpa":14656.147186147187},{"ad_name":"BT_興味関心_ALL_072_LinkAd_st_po_241219_ank2
+                -
+                コピー","spend":8856,"impression":8858,"cpm":1428.2488791407284,"click":9,"ctr":0.0010160307067058026,"cpc":1405.7142857142858,"conversion":21,"cvr":2.3333333333333335,"cpa":602.4489795918367},{"ad_name":"BT_興味関心_ALL_078_LinkAd_st_po_ank2","spend":38295,"impression":14731,"cpm":3713.7426418534287,"click":108,"ctr":0.0073314778358563575,"cpc":506.5476190476191,"conversion":12,"cvr":0.1111111111111111,"cpa":4558.928571428572},{"ad_name":"BT_リタゲ_ALL_089_LinkAd_st_po_ank2
+                -
+                コピー","spend":21418,"impression":3685,"cpm":8303.159527040125,"click":42,"ctr":0.011397557666214383,"cpc":728.5034013605442,"conversion":11,"cvr":0.2619047619047619,"cpa":2781.5584415584417},{"ad_name":"BT_興味関心_ALL_046_LinkAd_st_po_241210_ank2
+                -
+                コピー","spend":4665,"impression":1535,"cpm":4341.554211261052,"click":12,"ctr":0.007817589576547232,"cpc":555.3571428571429,"conversion":10,"cvr":0.8333333333333334,"cpa":666.4285714285714}]
+            </input>
+            <output>
+                current_status: 引き続き1日1粒訴求が全体のCV数をけん引。CV数が過剰になっているが、粒見せだけでなくパッケージ画像もCVRが高い状況
+                future_implications:
+                1日1粒は軸にしつつ、様々な素材との掛け合わせでデザインを開拓できる余地あり。現状制作中のバナーの中にも含まれているため、そちらをこのまま進めていく。
+            </output>
+        </example>
+        <example>
+            <input>
+                adds:
+                [{"ad_name":"BT_リタゲ_ALL_089_LinkAd_st_po_ank2","spend":224851,"impression":94598,"cpm":3395.5867384692524,"click":919,"ctr":0.009714793124590372,"cpc":349.527436654749,"conversion":35,"cvr":0.03808487486398259,"cpa":9177.591836734695},{"ad_name":"BT_リタゲ_ALL_092_LinkAd_st_po_ank2","spend":79652,"impression":36771,"cpm":3094.5193611425157,"click":226,"ctr":0.0061461477795001496,"cpc":503.4892541087232,"conversion":12,"cvr":0.05309734513274336,"cpa":9482.380952380952},{"ad_name":"BT_リタゲ_ALL_118_LinkAd_st_po_241218_ank2","spend":42663,"impression":13465,"cpm":4526.338125298393,"click":88,"ctr":0.006535462309691794,"cpc":692.5811688311688,"conversion":10,"cvr":0.11363636363636363,"cpa":6094.714285714286},{"ad_name":"BT_リタゲ_ALL_097_LinkAd_st_po_241210_ank2","spend":27348,"impression":6966,"cpm":5608.465608465608,"click":64,"ctr":0.00918748205569911,"cpc":610.4464285714286,"conversion":4,"cvr":0.0625,"cpa":9767.142857142857},{"ad_name":"BT_リタゲ_ALL_095_LinkAd_st_po_ank2","spend":2563,"impression":648,"cpm":5650.352733686067,"click":5,"ctr":0.007716049382716049,"cpc":732.2857142857143,"conversion":0,"cvr":0,"cpa":"#DIV/0!"}]
+            </input>
+            <output>
+                current_status: 1日1粒だけでなく、「Wの機能」を訴求したバナーも非常に好調で、特にCVRが高い傾向
+                future_implications:
+                W機能軸はあまり制作してきていない軸のため、今後の展開の候補とする。特にここまで1日1粒訴求がメインになってきているため、優先度をあげて制作していきたい
+            </output>
+        </example>
+        <example>
+            <input>
+                adds:
+                [{"ad_name":"BT_リタゲ_ALL_089_LinkAd_st_po_ank2","spend":1156663,"impression":2659338,"cpm":621.3485139104974,"click":59056,"ctr":0.02220703047149328,"cpc":27.97981093006154,"conversion":102.19,"cvr":0.0017303914928203739,"cpa":16169.64198342024},{"ad_name":"BT_リタゲ_ALL_092_LinkAd_st_po_ank2","spend":19712,"impression":14067,"cpm":2001.84829743371,"click":372,"ctr":0.026444870974621455,"cpc":75.6989247311828,"conversion":7.85,"cvr":0.02110215053763441,"cpa":3587.2611464968154},{"ad_name":"BT_リタゲ_ALL_118_LinkAd_st_po_241218_ank2","spend":138820,"impression":165341,"cpm":1199.4259482783202,"click":6147,"ctr":0.03717771151740947,"cpc":32.26196286225569,"conversion":6,"cvr":0.0009760858955588092,"cpa":33052.380952380954},{"ad_name":"BT_リタゲ_ALL_097_LinkAd_st_po_241210_ank2","spend":54936,"impression":86517,"cpm":907.1049620305836,"click":3274,"ctr":0.03784227377278454,"cpc":23.970678069639586,"conversion":3,"cvr":0.0009163103237629811,"cpa":26160},{"ad_name":"BT_リタゲ_ALL_095_LinkAd_st_po_ank2","spend":22735,"impression":19387,"cpm":1675.2757738985624,"click":164,"ctr":0.008459276834992521,"cpc":198.04006968641116,"conversion":2.55,"cvr":0.015548780487804876,"cpa":12736.69467787115}]
+            </input>
+            <output>
+                current_status: 引き続き数値紙バナーが最も好調にＣＶ獲得に貢献。
+                future_implications: 審査問題解消を進め、ＹＤＡなどで好調な新規バナーを検証していきたい。
+            </output>
+        </example>
+        <example>
+            <input>
+                adds:
+                [{"ad_name":"241224_BT_shitekidousuru_1200x628_2412","spend":21971,"impression":199160,"cpm":157.59762430780708,"click":319,"ctr":0.0016017272544687688,"cpc":98.3922973578146,"conversion":7,"cvr":0.0219435736677116,"cpa":4483.877551020409},{"ad_name":"241030_BT_130over-type4-offer_1200x628_2410.jpg_03","spend":46513,"impression":677926,"cpm":98.01533332125166,"click":1222,"ctr":0.0018025566212241453,"cpc":54.375730652326396,"conversion":6,"cvr":0.004909983633387889,"cpa":11074.52380952381},{"ad_name":"241030_BT_taisho-2gokan-hangaku_1200x628_2410.jpg_05","spend":28889,"impression":436453,"cpm":94.55771870052446,"click":605,"ctr":0.0013861744563561254,"cpc":68.21487603305785,"conversion":4,"cvr":0.006611570247933884,"cpa":10317.5},{"ad_name":"241030_BT_1d33yen-type2-offer_600x600_2410.jpg_2","spend":19323,"impression":210940,"cpm":130.86321093337307,"click":298,"ctr":0.0014127239973452167,"cpc":92.63183125599234,"conversion":4,"cvr":0.013422818791946308,"cpa":6901.071428571429},{"ad_name":"241209_BT_1d33yen-type2-offer_600x600_2410.jpg_01","spend":20408,"impression":207576,"cpm":140.4511394105567,"click":328,"ctr":0.0015801441399776468,"cpc":88.8850174216028,"conversion":3,"cvr":0.009146341463414634,"cpa":9718.095238095239}]
+            </input>
+            <output>
+                current_status: 新規検証開始した「健康診断」訴求が高CVRを記録しており、CV数としても全体で最も多くなっている。
+                future_implications:
+                1200サイズは商品パッケージ画像のバナーが徐々に摩耗してきており、低CVRとなっているため、他未検証のしなやか訴求などに順次差し替えていく。
+            </output>
+        </example>
+        <example>
+            <input>
+                adds:
+                [{"ad_name":"ET_カスタマーマッチ(EJ購入者)_012_link_st_po_kiji","spend":125555,"impression":51263,"cpm":3498.9034140468902,"click":613,"ctr":0.011957942375592532,"cpc":292.6007923560942,"conversion":16,"cvr":0.026101141924959218,"cpa":11210.267857142859},{"ad_name":"ET_ASC_028_link_st_po_240821_kiji","spend":28761,"impression":16069,"cpm":2556.9197123120834,"click":181,"ctr":0.011263924326342647,"cpc":227.00078926598266,"conversion":10,"cvr":0.055248618784530384,"cpa":4108.714285714286},{"ad_name":"ET_DEMO_WOMEN_011_link_st_po_kiji","spend":34457,"impression":11114,"cpm":4429.03416540271,"click":311,"ctr":0.027982724491632176,"cpc":158.27744602664217,"conversion":9,"cvr":0.028938906752411574,"cpa":5469.3650793650795},{"ad_name":"ET_カスタマーマッチ_039_link_st_po_241107_ank","spend":67933,"impression":11101,"cpm":8742.198257557237,"click":277,"ctr":0.024952706963336638,"cpc":350.3506962351728,"conversion":4,"cvr":0.01444043321299639,"cpa":24261.785714285717},{"ad_name":"ET_カスタマーマッチ_049_link_st_po_241224_kiji","spend":27869,"impression":3950,"cpm":10079.204339963833,"click":33,"ctr":0.008354430379746836,"cpc":1206.4502164502164,"conversion":3,"cvr":0.09090909090909091,"cpa":13270.952380952382}]
+            </input>
+            <output>
+                current_status:
+                肝臓イラストがCVを最も獲得、またエラグ酸を押し出した成分バナーが高いCTRを出している。クリック母数が少ないが、黒背景×商品パケ×お得感がCVRが高い結果に。
+                future_implications: 黒背景×商品パケ×お得感にエラグ酸バナーの要素を追加しCTRを担保しつつ、CVRの改善を図る。
+                肝臓イラスト×商品パケ×お得感でCPA良化を目指す。
+            </output>
+        </example>
+        <example>
+            <input>
+                adds:
+                [{"ad_name":"ET_リタゲ_013_link_st_po_241007_ank","spend":88640,"impression":24872,"cpm":5091.209851582962,"click":180,"ctr":0.007237053715020907,"cpc":703.4920634920635,"conversion":18,"cvr":0.1,"cpa":7034.920634920635},{"ad_name":"ET_リタゲ_001_link_st_po_241007_ank","spend":48088,"impression":15351,"cpm":4475.092362526406,"click":202,"ctr":0.01315875187284216,"cpc":340.08486562942005,"conversion":6,"cvr":0.0297029702970297,"cpa":11449.52380952381},{"ad_name":"ET_リタゲ_011_link_st_po_241030_ank","spend":817,"impression":225,"cpm":5187.3015873015875,"click":1,"ctr":0.0044444444444444444,"cpc":1167.142857142857,"conversion":0,"cvr":0,"cpa":"#DIV/0!"},{"ad_name":"ET_リタゲ_002_link_st_po_241010_ank","spend":10065,"impression":1993,"cpm":7214.536592358972,"click":12,"ctr":0.006021073758153537,"cpc":1198.2142857142858,"conversion":0,"cvr":0,"cpa":"#DIV/0!"},{"ad_name":"ET_リタゲ_003_link_st_po_241030_ank","spend":1054,"impression":148,"cpm":10173.745173745176,"click":1,"ctr":0.006756756756756757,"cpc":1505.7142857142858,"conversion":0,"cvr":0,"cpa":"#DIV/0!"}]
+            </input>
+            <output>
+                current_status: オファー訴求×効果効能がCVRが高く獲得を牽引している状況。
+                future_implications: お得感に「お一人様1回限り」など限定感をかけ合わせたバナーを優先的に開発していく。
+            </output>
+        </example>
+        <example>
+            <input>
+                adds:
+                [{"ad_name":"BT_ASC_ALL_005_LinkAd_st_po_241219_ank2","spend":39761,"impression":53357,"cpm":1064.5543897038547,"click":60,"ctr":0.0011245010026800608,"cpc":946.6904761904763,"conversion":69,"cvr":1.15,"cpa":823.2091097308489},{"ad_name":"BT_興味関心_ALL_046_LinkAd_st_po_241210_ank2","spend":648503,"impression":397435,"cpm":2331.029871910771,"click":2318,"ctr":0.0058324002667102795,"cpc":399.66904967336376,"conversion":59,"cvr":0.02545297670405522,"cpa":15702.25181598063},{"ad_name":"BT_ASC_ALL_009_LinkAd_st_po_ank2","spend":123890,"impression":39322,"cpm":4500.933683070909,"click":212,"ctr":0.005391383958089619,"cpc":834.8382749326146,"conversion":55,"cvr":0.25943396226415094,"cpa":3217.922077922078},{"ad_name":"BT_ASC_ALL_003_LinkAd_st_po_241210_ank2","spend":43952,"impression":14666,"cpm":4281.233562564532,"click":104,"ctr":0.007091231419609982,"cpc":603.7362637362638,"conversion":26,"cvr":0.25,"cpa":2414.9450549450553},{"ad_name":"BT_ASC_ALL_002_LinkAd_st_po_ank2","spend":14390,"impression":18280,"cpm":1124.5701781806815,"click":22,"ctr":0.0012035010940919038,"cpc":934.4155844155845,"conversion":22,"cvr":1,"cpa":934.4155844155845}]
+            </input>
+            <output>
+                current_status: 引き続き1日1粒訴求が全体のCV数をけん引。一方、最下部の食事画像の効果が上がってきており、CVRが高い状況
+                future_implications: 1日1粒の軸で様々なクリエイティブを展開しつつ、食事画像との掛け合わせバナーも今後の制作候補として進めていく
+            </output>
+        </example>
+        <example>
+            <input>
+                adds:
+                [{"ad_name":"BT_リタゲ_ALL_089_LinkAd_st_po_ank2","spend":389634,"impression":163142,"cpm":3411.8743180787287,"click":1478,"ctr":0.009059592257052138,"cpc":376.60351826792964,"conversion":62,"cvr":0.04194857916102842,"cpa":8977.741935483871},{"ad_name":"BT_リタゲ_ALL_092_LinkAd_st_po_ank2","spend":110608,"impression":48961,"cpm":3227.2916928050604,"click":306,"ctr":0.006249872347378526,"cpc":516.3772175536882,"conversion":18,"cvr":0.058823529411764705,"cpa":8778.4126984127},{"ad_name":"BT_リタゲ_ALL_118_LinkAd_st_po_241218_ank2","spend":58018,"impression":17923,"cpm":4624.385267134807,"click":107,"ctr":0.005969982703788428,"cpc":774.6061415220294,"conversion":10,"cvr":0.09345794392523364,"cpa":8288.285714285714},{"ad_name":"BT_リタゲ_ALL_097_LinkAd_st_po_241210_ank2","spend":46868,"impression":10493,"cpm":6380.852541149883,"click":104,"ctr":0.009911369484418184,"cpc":643.7912087912089,"conversion":4,"cvr":0.038461538461538464,"cpa":16738.57142857143},{"ad_name":"BT_リタゲ_ALL_095_LinkAd_st_po_ank2","spend":3868,"impression":1062,"cpm":5203.120796341135,"click":8,"ctr":0.007532956685499058,"cpc":690.7142857142858,"conversion":0,"cvr":0,"cpa":"#DIV/0!"}]
+            </input>
+            <output>
+                current_status:
+                こちらでも1日1粒訴求が全体のCV数をけん引。爆売れ訴求はCVRの落ち込みが大きく、ユーザーが安易にクリックして離脱してしまっている可能性
+                future_implications: 軸になるのは、1日1粒訴求とW機能訴求。特に後者はまだまだ開拓の余地があるため、優先度を上げていく
+            </output>
+        </example>
+        <example>
+            <input>
+                adds:
+                [{"ad_name":"BT_リタゲ_ALL_089_LinkAd_st_po_ank2","spend":1825341,"impression":4247436,"cpm":613.9303805872531,"click":95378,"ctr":0.022455429581516945,"cpc":27.339952609616475,"conversion":143.61,"cvr":0.0015056931367820672,"cpa":18157.718821809063},{"ad_name":"BT_リタゲ_ALL_092_LinkAd_st_po_ank2","spend":309239,"impression":485794,"cpm":909.3772257376584,"click":16093,"ctr":0.03312721029901563,"cpc":27.451065680730753,"conversion":18.69,"cvr":0.0011613745106568074,"cpa":23636.704119850187},{"ad_name":"BT_リタゲ_ALL_118_LinkAd_st_po_241218_ank2","spend":35051,"impression":28412,"cpm":1762.384103296394,"click":706,"ctr":0.02484865549767704,"cpc":70.92472683124241,"conversion":7.85,"cvr":0.011118980169971671,"cpa":6378.707916287534},{"ad_name":"BT_リタゲ_ALL_097_LinkAd_st_po_241210_ank2","spend":54936,"impression":86518,"cpm":907.0944774497792,"click":3274,"ctr":0.03784183638086872,"cpc":23.970678069639586,"conversion":5,"cvr":0.0015271838729383018,"cpa":15696},{"ad_name":"BT_リタゲ_ALL_095_LinkAd_st_po_ank2","spend":80293,"impression":56408,"cpm":2033.4754948639504,"click":1649,"ctr":0.029233442064955324,"cpc":69.55990643680153,"conversion":3.61,"cvr":0.002189205579138872,"cpa":31774.04036406807}]
+            </input>
+            <output>
+                "current_status: 数値紙クリエイティブが引き続き獲得の柱に。
+                ドールタイプのクリエイティブはCPMが大きく違うことから、同じキャンペーン内で別オーディエンス層にリーチしていると考えられる。"
+                future_implications:
+                テキストなしの「紙」、「メーター」の数値クリエイティブが全体的にCVの付きが良く、「リアル感」の演出が高パフォーマンスのカギと言える。
+            </output>
+        </example>
+        <example>
+            <input>
+                adds:
+                [{"ad_name":"241224_BT_shitekidousuru_1200x628_2412","spend":117100,"impression":1056419,"cpm":158.35167134036237,"click":1848,"ctr":0.0017493059098709887,"cpc":90.5225726654298,"conversion":17,"cvr":0.0091991341991342,"cpa":9840.336134453783},{"ad_name":"241030_BT_130over-type4-offer_1200x628_2410.jpg_03","spend":59434,"impression":820976,"cpm":103.42045843692664,"click":1685,"ctr":0.002052435150357623,"cpc":50.38914794404409,"conversion":13,"cvr":0.00771513353115727,"cpa":6531.208791208792},{"ad_name":"241030_BT_1d33yen-type2-offer_600x600_2410.jpg_2","spend":26716,"impression":324866,"cpm":117.48140552016613,"click":407,"ctr":0.0012528242413795225,"cpc":93.77325377325378,"conversion":6,"cvr":0.014742014742014743,"cpa":6360.952380952382},{"ad_name":"241209_BT_1d33yen-type2-offer_600x600_2410.jpg_01","spend":27925,"impression":322658,"cpm":123.63820870041079,"click":462,"ctr":0.0014318566407775415,"cpc":86.34817563388992,"conversion":4,"cvr":0.008658008658008658,"cpa":9973.214285714286},{"ad_name":"241030_BT_taisho-2gokan-hangaku_1200x628_2410.jpg_05","spend":37112,"impression":535230,"cpm":99.05487894389863,"click":744,"ctr":0.0013900566111765035,"cpc":71.25960061443934,"conversion":4,"cvr":0.005376344086021506,"cpa":13254.285714285716}]
+            </input>
+            <output>
+                "current_status: 健康診断訴求が最もCV数をけん引。16:9サイズの中では最もCVRが高く、「健康診断」という訴求が効いていると思われる。
+                一方で最もCVRが高いのは１：１サイズの1日分33円の血圧対策訴求。"
+                future_implications:
+                16:9サイズの1日分33円訴求をメインにしたバナーが未検証のため、CVRのさらなる向上と、CPA低減を実現できる可能性が高い。
+            </output>
+        </example>
+        <example>
+            <input>
+                adds:
+                [{"ad_name":"BT_ASC_ALL_005_LinkAd_st_po_241219_ank2","spend":50438,"impression":68946,"cpm":1045.082901318216,"click":93,"ctr":0.0013488817335305893,"cpc":774.7772657450078,"conversion":93,"cvr":1,"cpa":774.7772657450078},{"ad_name":"BT_ASC_ALL_009_LinkAd_st_po_ank2","spend":172811,"impression":58416,"cpm":4226.117110772,"click":316,"ctr":0.005409476855655984,"cpc":781.24321880651,"conversion":88,"cvr":0.27848101265822783,"cpa":2805.3733766233768},{"ad_name":"BT_興味関心_ALL_046_LinkAd_st_po_241210_ank2","spend":670312,"impression":412763,"cpm":2319.947697416124,"click":2408,"ctr":0.0058338562322688805,"cpc":397.6696725201709,"conversion":63,"cvr":0.02616279069767442,"cpa":15199.818594104308},{"ad_name":"BT_ASC_ALL_003_LinkAd_st_po_241210_ank2","spend":75572,"impression":37364,"cpm":2889.412268493737,"click":193,"ctr":0.005165399850123113,"cpc":559.3782383419689,"conversion":52,"cvr":0.2694300518134715,"cpa":2076.153846153846},{"ad_name":"BT_興味関心_ALL_075_LinkAd_st_po_241210_ank2","spend":353661,"impression":233826,"cpm":2160.709245336276,"click":1282,"ctr":0.005482709365083438,"cpc":394.0951638065523,"conversion":32,"cvr":0.0249609984399376,"cpa":15788.437500000002}]
+            </input>
+            <output>
+                current_status: 引き続き1日1粒訴求が全体のCV数をけん引。粒見せだけでなくパッケージ画像のCVRがかなり高い状況。
+                future_implications:
+                パッケージ×1日1粒バナーは、更にバリエーションを作っていく必要あり。特に今はパッケージのほうが目立っているため、1日1粒の訴求を立たせたバナーを作るなども検討
+            </output>
+        </example>
+        <example>
+            <input>
+                adds:
+                [{"ad_name":"BT_リタゲ_ALL_089_LinkAd_st_po_ank2","spend":464368,"impression":193700,"cpm":3424.795338889299,"click":1773,"ctr":0.009153329891584926,"cpc":374.1584078639916,"conversion":80,"cvr":0.04512126339537507,"cpa":8292.285714285714},{"ad_name":"BT_リタゲ_ALL_092_LinkAd_st_po_ank2","spend":133507,"impression":58320,"cpm":3270.30668234372,"click":385,"ctr":0.006601508916323731,"cpc":495.3877551020409,"conversion":28,"cvr":0.07272727272727272,"cpa":6811.581632653062},{"ad_name":"BT_リタゲ_ALL_118_LinkAd_st_po_241218_ank2","spend":64855,"impression":19909,"cpm":4653.674217690492,"click":121,"ctr":0.006077653322617911,"cpc":765.702479338843,"conversion":10,"cvr":0.08264462809917356,"cpa":9265},{"ad_name":"BT_リタゲ_ALL_097_LinkAd_st_po_241210_ank2","spend":58045,"impression":12896,"cpm":6430.011520737327,"click":133,"ctr":0.010313275434243176,"cpc":623.469387755102,"conversion":4,"cvr":0.03007518796992481,"cpa":20730.357142857145},{"ad_name":"BT_リタゲ_ALL_091_LinkAd_st_po_ank2","spend":26081,"impression":7284,"cpm":5115.125127480976,"click":88,"ctr":0.012081274025260845,"cpc":423.3928571428571,"conversion":2,"cvr":0.022727272727272728,"cpa":18629.285714285714}]
+            </input>
+            <output>
+                current_status: 粒見せ×1日1粒訴求だけでなく、パッケージ×1日1粒バナーも好調。特にパッケージ×1日1粒バナーはCVRが高い傾向。
+                future_implications: パッケージ×1日1粒バナーに関して、「W機能訴求」や「血圧数値訴求」などとの組み合わせも含めてバリエーションを増やしていく。
+            </output>
+        </example>
+        <example>
+            <input>
+                adds:
+                [{"ad_name":"BT_リタゲ_ALL_089_LinkAd_st_po_ank2","spend":2197438,"impression":4982092,"cpm":630.0961810534899,"click":113075,"ctr":0.0226962890287855,"cpc":27.762079530021165,"conversion":171,"cvr":0.0015122706168472252,"cpa":18357.878028404346},{"ad_name":"BT_リタゲ_ALL_092_LinkAd_st_po_ank2","spend":434473,"impression":676497,"cpm":917.4847993201955,"click":22122,"ctr":0.03270081020314946,"cpc":28.056943960117273,"conversion":28.39,"cvr":0.0012833378537202786,"cpa":21862.476727217832},{"ad_name":"BT_リタゲ_ALL_118_LinkAd_st_po_241218_ank2","spend":47308,"impression":38564,"cpm":1752.485663905641,"click":861,"ctr":0.022326522145005703,"cpc":78.49344615895139,"conversion":9.47,"cvr":0.010998838559814171,"cpa":7136.521345602655},{"ad_name":"BT_リタゲ_ALL_097_LinkAd_st_po_241210_ank2","spend":123193,"impression":80185,"cpm":2194.799526095903,"click":2324,"ctr":0.028982976865997382,"cpc":75.72719449225474,"conversion":7.95,"cvr":0.0034208261617900172,"cpa":22137.106918238995},{"ad_name":"BT_リタゲ_ALL_091_LinkAd_st_po_ank2","spend":54936,"impression":86518,"cpm":907.0944774497792,"click":3274,"ctr":0.03784183638086872,"cpc":23.970678069639586,"conversion":6,"cvr":0.0018326206475259622,"cpa":13080}]
+            </input>
+            <output>
+                current_status: 先週に引き続き、数値紙のバナーが最も好調にCVを獲得。
+                future_implications: 審査落ち問題解消を優先、その後、YDAで好調のバナーを中心に検証して勝ち軸を増やす。
+            </output>
+        </example>
+        <example>
+            <input>
+                adds:
+                [{"ad_name":"241224_BT_shitekidousuru_1200x628_2412","spend":193017,"impression":2046702,"cpm":134.72336052271967,"click":3406,"ctr":0.0016641406516434733,"cpc":80.9567150406845,"conversion":27,"cvr":0.007927187316500293,"cpa":10212.539682539682},{"ad_name":"241030_BT_130over-type4-offer_1200x628_2410.jpg_03","spend":64562,"impression":892093,"cpm":103.38768331488822,"click":1940,"ctr":0.0021746611620088938,"cpc":47.541973490427104,"conversion":13,"cvr":0.006701030927835051,"cpa":7094.725274725275},{"ad_name":"241030_BT_1d33yen-type2-offer_600x600_2410.jpg_2","spend":35624,"impression":473408,"cpm":107.50014484636628,"click":593,"ctr":0.0012526193051236988,"cpc":85.82028426885088,"conversion":9,"cvr":0.01517706576728499,"cpa":5654.603174603175},{"ad_name":"241209_BT_1d33yen-type2-offer_600x600_2410.jpg_01","spend":37549,"impression":473890,"cpm":113.19383943832656,"click":678,"ctr":0.0014307117685538838,"cpc":79.11715128529288,"conversion":6,"cvr":0.008849557522123894,"cpa":8940.238095238095},{"ad_name":"241030_BT_taisho-2gokan-hangaku_1200x628_2410.jpg_05","spend":39087,"impression":563252,"cpm":99.13603756146705,"click":789,"ctr":0.0014007939607848707,"cpc":70.77131993481804,"conversion":4,"cvr":0.005069708491761723,"cpa":13959.642857142859}]
+            </input>
+            <output>
+                current_status:
+                商品画像を出していないバナーが最もＣＶ数をけん引しており、数値傾向を深ぼるとＣＴＲが他比較で高い＝多くの顕在ユーザーのクリックを獲得できている状態。
+                future_implications: 徐々に、商品画像を出していないバナーの検証を拡大することで、アカウント全体のパフォーマンスがさらに向上する可能性が高い。
+            </output>
+        </example>
+        <example>
+            <input>
+                adds:
+                [{"ad_name":"ET_DEMO_WOMEN_011_link_st_po_kiji","spend":103703,"impression":28366,"cpm":5222.701221784632,"click":736,"ctr":0.025946555735739972,"cpc":201.2868788819876,"conversion":23,"cvr":0.03125,"cpa":6441.180124223603},{"ad_name":"ET_興味関心_DEMO_MEN_005_link_st_po_kiji
+                -
+                コピー","spend":21231,"impression":11227,"cpm":2701.523113921796,"click":89,"ctr":0.007927318072503785,"cpc":340.78651685393265,"conversion":17,"cvr":0.19101123595505617,"cpa":1784.1176470588236},{"ad_name":"ET_カスタマーマッチ(EJ購入者)_042_link_st_po_241204_kiji","spend":82457,"impression":19858,"cpm":5931.902220048055,"click":297,"ctr":0.01495618894148454,"cpc":396.61856661856666,"conversion":16,"cvr":0.05387205387205387,"cpa":7362.232142857143},{"ad_name":"ET_カスタマーマッチ(EJ購入者)_012_link_st_po_kiji","spend":137764,"impression":56191,"cpm":3502.4419263888217,"click":644,"ctr":0.01146091011015999,"cpc":305.5989352262644,"conversion":16,"cvr":0.024844720496894408,"cpa":12300.357142857143},{"ad_name":"ET_興味関心_049_link_st_po_241224_kiji
+                -
+                コピー","spend":6841,"impression":6947,"cpm":1406.7737358366408,"click":17,"ctr":0.002447099467395998,"cpc":574.8739495798319,"conversion":14,"cvr":0.8235294117647058,"cpa":698.0612244897959}]
+            </input>
+            <output>
+                "current_status: エラグ酸を押し出したバナーがCV・CTRともに最も高い結果に。
+                最下部の黒背景×商品パケ×お得感の効果が上がってきており、CVRが最も高い状況となった。"
+                "future_implications: エラグ酸軸で他にもクリエイティブを展開しつつ、
+                商品パケ×お得感との掛け合わせバナーも制作候補として進めていく。"
+            </output>
+        </example>
+        <example>
+            <input>
+                adds:
+                [{"ad_name":"ET_リタゲ_013_link_st_po_241007_ank","spend":248488,"impression":60100,"cpm":5906.536724506775,"click":422,"ctr":0.007021630615640599,"cpc":841.1916046039269,"conversion":36,"cvr":0.08530805687203792,"cpa":9860.63492063492},{"ad_name":"ET_リタゲ_001_link_st_po_241007_ank","spend":125643,"impression":38032,"cpm":4719.446781657552,"click":474,"ctr":0.012463188893563315,"cpc":378.67088607594934,"conversion":18,"cvr":0.0379746835443038,"cpa":9971.666666666666},{"ad_name":"ET_リタゲ_011_link_st_po_241030_ank","spend":14994,"impression":3201,"cpm":6691.65885660731,"click":26,"ctr":0.008122461730709154,"cpc":823.8461538461538,"conversion":2,"cvr":0.07692307692307693,"cpa":10710},{"ad_name":"ET_リタゲ_003_link_st_po_241030_ank","spend":26009,"impression":6541,"cpm":5680.4333107650655,"click":47,"ctr":0.007185445650512154,"cpc":790.5471124620061,"conversion":2,"cvr":0.0425531914893617,"cpa":18577.857142857145},{"ad_name":"ET_リタゲ_002_link_st_po_241010_ank","spend":20554,"impression":4557,"cpm":6443.462177497728,"click":25,"ctr":0.0054860653938994955,"cpc":1174.5142857142857,"conversion":0,"cvr":0,"cpa":"#DIV/0!"}]
+            </input>
+            <output>
+                current_status: 商品パケ×オファー訴求×効果効能がCVRが高い結果。
+                future_implications: 「980円」「初回限定」といったお得感・限定感の要素を追加したバナーでCTR向上を図りたい。
+                img_info: 画像は2枚あり1枚目はサプリの広告で2枚目は口座の広告です。
+            </output>
+        </example>
+    </examples>
+    <output>
+        <current_status>現状整理の内容をここに記述します。</current_status>
+        <future_implications>今後の示唆の内容をここに記述します。</future_implications>
+        <img_info>各画像の内容をここに記述します。</img_info>
+    </output>
 </instruction>
-
-<input>
-    <ad_name>{{ad_name}}</ad_name>
-    <image_url>{{image_url}}</image_url>
-    <cost_gross>{{cost_gross}}</cost_gross>
-    <cost_net>{{cost_net}}</cost_net>
-    <imp>{{imp}}</imp>
-    <cpm>{{cpm}}</cpm>
-    <click>{{click}}</click>
-    <ctr>{{ctr}}</ctr>
-    <cpc>{{cpc}}</cpc>
-    <cv>{{cv}}</cv>
-    <cvr>{{cvr}}</cvr>
-    <cpa>{{cpa}}</cpa>
-</input>
-
-<output>
-    <current_status>現状整理の内容をここに記述します。</current_status>
-    <future_implications>今後の示唆の内容をここに記述します。</future_implications>
-</output>
 ```
