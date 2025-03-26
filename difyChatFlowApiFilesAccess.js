@@ -51,6 +51,7 @@ function difyChatflowApiFilesAccess(data, adSetId, adSetName) {
 
     const addsForPayloard = JSON.stringify(addArr);
     Logger.log('addsForPayloard: ' + addsForPayloard);
+    Logger.log('imagesForPayload: ' + imagesForPayload);
 
     const conversationId = getConversationId(adSetId) || "";
     Logger.log('取得した会話ID: ' + conversationId + ' adSetId: ' + adSetId);
@@ -82,7 +83,9 @@ function difyChatflowApiFilesAccess(data, adSetId, adSetName) {
     
     // StatusCodeによって処理分岐
     if (response.getResponseCode() === 200) {
-    const responseJson = JSON.parse(responseText);
+        const responseJson = JSON.parse(responseText);
+        Logger.log('responseJson: ' + responseJson);
+        Logger.log('responseJson.content: ' + responseJson.content);
         const answerJson = JSON.parse(responseJson.answer);
         const newConversationId = responseJson.conversation_id;
 
@@ -92,7 +95,7 @@ function difyChatflowApiFilesAccess(data, adSetId, adSetName) {
         Logger.log('会話ID: ' + newConversationId);
         Logger.log('現状整理: ' + answerJson.current_status);
         Logger.log('今後の示唆: ' + answerJson.future_implications);
-        Logger.log('画像情報: ' + answerJson.img_info);
+        // Logger.log('画像情報: ' + answerJson.img_info);
         console.log('difyChatflowApi return answerJson: ' + JSON.stringify(answerJson));
         
         return answerJson;

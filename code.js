@@ -150,12 +150,11 @@ function facebook_getAds(daySince, dayUntil) {
   // 広告シート作成
   facebook_writeFacebookAdsDataToSheet(sheetName, endpoint, fields, daySince, dayUntil);
 
-  // CRTレポート作成
-  makeCreativeReport();
-
   // メッセージを表示
   console.log(sheetName + "情報 取得完了");
-  SpreadsheetApp.getUi().alert(sheetName + "情報を取得してCRTレポートを作成しました。");
+
+  // CRTレポート作成
+  makeCreativeReport();
 }
 
 // 「広告」シートをもとにクリエイティブレポート（「CRTレポート」シート）を作成する関数
@@ -166,6 +165,11 @@ function makeCreativeReport() {
   var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   var adSheet = spreadsheet.getSheetByName('広告');
   var reportSheet = spreadsheet.getSheetByName(reportSheetName);
+
+  // シートを表示
+  reportSheet.activate();
+
+  SpreadsheetApp.getActiveSpreadsheet().toast("しばらくお待ちください。", reportSheetName + "作成", 10);
 
   // 「CRTレポート」シートがなければ作成、あれば取得する
   if (!reportSheet) {
@@ -304,6 +308,7 @@ function makeCreativeReport() {
 
   // メッセージを表示
   console.log(reportSheetName + "情報 取得完了");
+  SpreadsheetApp.getUi().alert("CRTレポート作成が完了しました。内容をご確認ください。");
 }
 
 // 運用レポートに広告セットシートのデータを整形して書き込む関数

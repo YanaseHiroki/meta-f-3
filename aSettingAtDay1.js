@@ -2,12 +2,14 @@
 
 function aSettingAtDay1() {
     Logger.log('初期設定を開始します');
+    SpreadsheetApp.getActiveSpreadsheet().toast("必要な設定値を入力してください。", "初期設定", 10);
      
     initializeScriptProperties();   // スクリプトプロパティを初期化
     addTrigger();                   // トリガーを追加
-    onOpenProcess();                // サイドバーを表示, カスタムメニューを表示
+    onOpenProcess();                // カスタムメニューを表示
     refreshAccessToken();           // 長期トークンを取得
 
+    SpreadsheetApp.getActiveSpreadsheet().toast("初期設定を終了します。", "初期設定", 10);
     Logger.log('初期設定を終了します');
 }
 

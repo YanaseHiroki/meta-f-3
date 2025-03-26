@@ -2,14 +2,14 @@
 function showScriptDialog() {
 var scriptId = ScriptApp.getScriptId();
 var url = "https://script.google.com/d/" + scriptId + "/edit";
-var html = '<button onclick="window.open(\'' + url + '\', \'_blank\'); google.script.host.close();"><h1>Apps Script 開く</h1></button>';
-var userInterface = HtmlService.createHtmlOutput(html).setWidth(300).setHeight(250);
+var html = '<br><br><button onclick="window.open(\'' + url + '\', \'_blank\'); google.script.host.close();"><h1>Apps Script を開く</h1></button>';
+var userInterface = HtmlService.createHtmlOutput(html).setWidth(300).setHeight(200);
 SpreadsheetApp.getUi().showModalDialog(userInterface, "Apps Script");
 }
 
 // スプレッドシートを開いたときに実行される関数
 function onOpenProcess() {
-    showSidebar();                  // サイドバーを表示
+    // showSidebar();                  // サイドバーを表示
     addOriginalMenu();              // カスタムメニューを表示
     showScriptDialog();             // Apps Scriptのリンクを表示【開発用】
     checkScriptProperties();        // スクリプトプロパティのチェック
@@ -33,8 +33,11 @@ function addOriginalMenu() {
 
     var ui = SpreadsheetApp.getUi();
 
-    ui.createMenu('初期設定')
-        .addItem('Metaトークン登録', 'registerMetaLongToken')
+    ui.createMenu('スクリプト実行')
+        .addItem('サイドメニュー表示', 'showSidebar')
+        .addItem('CRTレポート再作成', 'makeCreativeReport')
+        .addSeparator()
+        .addItem('APIトークン更新', 'refreshAccessToken')
         .addToUi();
 
         // .addItem('', '') // メニュー追加
