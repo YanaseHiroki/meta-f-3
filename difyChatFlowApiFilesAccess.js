@@ -85,8 +85,19 @@ function difyChatflowApiFilesAccess(data, adSetId, adSetName) {
     if (response.getResponseCode() === 200) {
         const responseJson = JSON.parse(responseText);
         Logger.log('responseJson: ' + responseJson);
-        Logger.log('responseJson.content: ' + responseJson.content);
-        const answerJson = JSON.parse(responseJson.answer);
+        Logger.log('responseJson.answer: ' + responseJson.answer);
+
+        let answerText = responseJson.answer;
+
+        // 回答が```json\n{...}```の形式で返ってくるので不要な部分を削除
+        if (answerText.startsWith("```json\n")) {
+            answerText = answerText.replace("```json\n", "");
+        }
+        if (answerText.endsWith("```")) {
+            answerText = answerText.replace("```", "");
+        }
+
+        const answerJson = JSON.parse(answerText);
         const newConversationId = responseJson.conversation_id;
 
         // 会話IDを「会話ID管理」シートに保存

@@ -1,9 +1,9 @@
-{
+responseText: {
   "event": "message",
-  "task_id": "6a15d75e-200b-496c-8fff-3b0bdf7999f9",
-  "id": "6a3e8e4f-2381-429b-b176-b2a9f9decdf3",
-  "message_id": "6a3e8e4f-2381-429b-b176-b2a9f9decdf3",
-  "conversation_id": "24529cc5-738d-4b9d-95f5-4db24312e488",
+  "task_id": "e555b357-4c49-4d43-baae-5bea90d151c1",
+  "id": "b47dc5df-f977-4713-b5f3-bef5679a15ac",
+  "message_id": "b47dc5df-f977-4713-b5f3-bef5679a15ac",
+  "conversation_id": "a60428d4-8ff2-431a-a37f-1d74e95027cb",
   "mode": "advanced-chat",
   "answer": "",
   "metadata": {
@@ -18,7 +18,7 @@
         "segment_id": "355bc73a-4a47-4d49-9435-17276bd30ec8",
         "retriever_from": "workflow",
         "score": 0.05572029,
-        "hit_count": 76,
+        "hit_count": 95,
         "word_count": 157,
         "segment_position": 1,
         "index_node_hash": "0ff068c8e19048459072e9951bd523cb0dd05fab94b7ecdcb7ccfa8fc9f505e4",
@@ -42,5 +42,5 @@
       "latency": 0.0
     }
   },
-  "created_at": 1742803547
+  "created_at": 1742983850
 }
