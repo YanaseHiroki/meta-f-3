@@ -166,9 +166,6 @@ function makeCreativeReport() {
   var adSheet = spreadsheet.getSheetByName('広告');
   var reportSheet = spreadsheet.getSheetByName(reportSheetName);
 
-  // シートを表示
-  reportSheet.activate();
-
   SpreadsheetApp.getActiveSpreadsheet().toast("しばらくお待ちください。", reportSheetName + "作成", 10);
 
   // 「CRTレポート」シートがなければ作成、あれば取得する
@@ -177,6 +174,9 @@ function makeCreativeReport() {
   } else {
     reportSheet.clear(); // 既存のデータをクリア
   }
+
+  // シートを表示
+  reportSheet.activate();
 
   // A列の幅を35に設定
   reportSheet.setColumnWidth(1, 35);
