@@ -104,6 +104,35 @@ function getAdSetsAndMakeOperationReport(daySince, dayUntil) {
   SpreadsheetApp.getUi().alert("広告セット情報を取得して運用レポートを作成しました。");
 }
 
+// 前日の広告情報を取得する関数（動作確認用）
+function facebook_getAdsForYesterday() {
+  console.log("facebook_getAdsForYesterday()");
+
+  // 昨日の日付を取得
+  var daySince = facebook_getDateNDaysAgo(1); // 開始日
+  var dayUntil = facebook_getDateNDaysAgo(1); // 終了日
+
+  var sheetName = "広告";
+  var endpoint = "ads";
+
+  console.log(sheetName + "情報 取得開始");
+
+  // 広告データを取得してスプレッドシートに書き込む
+  var fields = "campaign_id,campaign_name,adset_id,adset_name,ad_id,ad_name,impressions,cpm,clicks,ctr,cpc,actions,spend,date_start,date_stop";
+  var adsCount = facebook_writeFacebookAdsDataToSheet(sheetName, endpoint, fields, daySince, dayUntil);
+
+  if (adsCount > 0) {
+    console.log(sheetName + "情報 取得完了");
+    SpreadsheetApp.getUi().alert(`${adsCount}件の広告データを取得しました。`);
+  } else {
+    console.log(sheetName + "情報がありませんでした。");
+    SpreadsheetApp.getUi().alert("前日の広告データはありませんでした。");
+  }
+
+  // CRTレポート作成
+  makeCreativeReport();
+}
+
 // 前日の広告セット情報を取得する関数（定期実行用）
 function facebook_getAdSetsForYesterday() {
   console.log("facebook_getAdSetsForYesterday()");
