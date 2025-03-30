@@ -9,7 +9,7 @@ SpreadsheetApp.getUi().showModalDialog(userInterface, "Apps Script");
 
 // スプレッドシートを開いたときに実行される関数
 function onOpenProcess() {
-    // showSidebar();                  // サイドバーを表示
+    showSidebar();                  // サイドバーを表示
     addOriginalMenu();              // カスタムメニューを表示
     showScriptDialog();             // Apps Scriptのリンクを表示【開発用】
     checkScriptProperties();        // スクリプトプロパティのチェック
