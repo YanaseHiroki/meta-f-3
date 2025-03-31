@@ -146,23 +146,30 @@ function getAdsToSheet(daySince, dayUntil) {
   }
   
   // Meta APIから広告データを取得する
-  var adsData = getAdsData(daySince, dayUntil);
+  const fields = "campaign_id,campaign_name,adset_id,adset_name,ad_id,ad_name,impressions,cpm,clicks,ctr,cpc,actions,spend,date_start,date_stop";
+  var adsData = getAdsData(fields, daySince, dayUntil);
 
   if (!adsData || adsData.length === 0) {
     console.log("広告データが取得できませんでした。");
-    SpreadsheetApp.getUi().alert("広告データが取得できませんでした。");
     return 0;
   }
 
   // 広告データをスプレッドシートに書き込む
   var sheetName = "広告";
+  var endpoint = "ads";
+  const writtenData = writeDataToSheet(sheetName, adsData, fields, endpoint, daySince, dayUntil);
 
+  if (writtenData) {
+    console.log("取得した広告データをスプレッドシートに書き込みました。");
+  } else {
+    console.log("取得した広告データの書き込みに失敗しました。");
+  }
 
-
+  return writtenData.length;
 }
 
 // 広告データを取得する関数
-function getAdsData(daySince, dayUntil) {
+function getAdsData(fields, daySince, dayUntil) {
   console.log(`getAdsData(${daySince}, ${dayUntil})`);
 
   // スクリプトプロパティから設定値を取得
@@ -178,7 +185,7 @@ function getAdsData(daySince, dayUntil) {
   const params = {
     access_token: META_ACCESS_TOKEN,
     level: "ad",
-    fields: "campaign_id,campaign_name,adset_id,adset_name,ad_id,ad_name,impressions,cpm,clicks,ctr,cpc,actions,spend,date_start,date_stop",
+    fields: fields,
     sort: "spend_descending",
     limit: 10000,
     time_range: JSON.stringify({ since: daySince, until: dayUntil })
@@ -189,14 +196,14 @@ function getAdsData(daySince, dayUntil) {
 
   // レスポンスコードを確認
   if (response.getResponseCode() !== 200) {
-    console.log(`APIリクエストに失敗しました。レスポンスコード: ${response.getResponseCode()}`);
-    console.log(`レスポンス: ${response.getContentText()}`);
+    console.log(`getAdsData APIリクエストに失敗しました。レスポンスコード: ${response.getResponseCode()}`);
+    console.log(`getAdsData レスポンス: ${response.getContentText()}`);
     return null;
   }
 
   const responseData = JSON.parse(response.getContentText());
   const adsData = responseData.data || [];
-  console.log(`取得した広告データ件数: ${adsData.length}`);
+  console.log(`getAdsData 取得した広告データ件数: ${adsData.length}`);
 
   return adsData;
 }
@@ -802,7 +809,30 @@ function facebook_writeFacebookAdsDataToSheet(sheetName, endpoint, fields, daySi
 
   var spreadsheet = SpreadsheetApp.getActiveSpreadsheet(); // スプレッドシートを取得
 
+
+  // 指定された種類のデータをAPIで取得
+  var data = facebook_getData(endpoint);
+
+  if (!data) {
+    console.log(`データが取得できませんでした。エンドポイント: ${endpoint}`);
+    return;
+  }
+
+  // データをスプレッドシートに書き込む
+  const writtenData = writeDataToSheet(sheetName, data, fields, endpoint, daySince, dayUntil);
+
+  // sheetNameシートを表示する
+  sheet.activate();
+
+  // 書き込んだデータの件数を返却
+  return writtenData;
+}
+
+// データをスプレッドシートに書き込む関数
+function writeDataToSheet(sheetName, data, fields, endpoint, daySince, dayUntil) {
+
   // シートが存在する場合は、そのシートを削除
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = spreadsheet.getSheetByName(sheetName);
   if (sheet) {
     // シートのすべてをクリアする
@@ -815,9 +845,6 @@ function facebook_writeFacebookAdsDataToSheet(sheetName, endpoint, fields, daySi
   // シートを表示
   sheet.activate();
 
-  // 指定された種類のデータをAPIで取得
-  var data = facebook_getData(endpoint);
-
   if (!data || data.length === 0) {
     Logger.log("データが取得できませんでした。");
     sheet.getRange(1, 1).setValue("データなし");
@@ -826,24 +853,10 @@ function facebook_writeFacebookAdsDataToSheet(sheetName, endpoint, fields, daySi
     return 0;
   }
 
-  var firstData = null;
-  for (var i = 0; i < data.length; i++) {
-    firstData = getFacebookAdsDataForCampaign(data[i].id, fields, daySince, dayUntil);
-    if (firstData && firstData.length > 0) {
-      break;
-    }
-  }
-  if (!firstData || firstData.length === 0) {
-    Logger.log("ヘッダーのサンプルデータが取得できませんでした。");
-    sheet.getRange(1, 1).setValue("データなし");
-    sheet.getRange(1, 2).setValue(daySince);
-    sheet.getRange(1, 3).setValue(dayUntil);
-    return 0;
-  }
+  // ヘッダーに使用するデータを取得
+  var sampleData = data[0];
 
-  var sampleAd = firstData[0];
-
-  if (!sampleAd || Object.keys(sampleAd).length === 0) {
+  if (!sampleData || Object.keys(sampleData).length === 0) {
     Logger.log("ヘッダーに使用するデータが取得できませんでした。");
     sheet.getRange(1, 1).setValue("データなし");
     sheet.getRange(1, 2).setValue(daySince);
@@ -851,7 +864,7 @@ function facebook_writeFacebookAdsDataToSheet(sheetName, endpoint, fields, daySi
     return 0;
   }
 
-  var header = Object.keys(sampleAd);
+  var header = Object.keys(sampleData);
 
   // 広告の場合はヘッダーに画像URLを追加
   if (endpoint === 'ads') {
@@ -868,68 +881,69 @@ function facebook_writeFacebookAdsDataToSheet(sheetName, endpoint, fields, daySi
   var dataToWrite = [];
 
   // 各キャンペーンのデータを取得して配列に格納
-  for (var c = 0; c < data.length; c++) {
-    var adsData = getFacebookAdsDataForCampaign(data[c].id, fields, daySince, dayUntil);
+  // for (var c = 0; c < data.length; c++) {
+  //   var adsData = getFacebookAdsDataForCampaign(data[c].id, fields, daySince, dayUntil);
 
-    if (adsData && adsData.length > 0) {
-      for (var i = 0; i < adsData.length; i++) {
-        var adData = adsData[i];
-        var rowData = {};
+  //   if (adsData && adsData.length > 0) {
+  //     for (var i = 0; i < adsData.length; i++) {
+  //       var adData = adsData[i];
+  //       var rowData = {};
 
-        // 各フィールドに対応する値をキーとともに格納
-        var keys = Object.keys(adData);
-        for (var j = 0; j < keys.length; j++) {
-          var key = keys[j];
+  //       // 各フィールドに対応する値をキーとともに格納
+  //       var keys = Object.keys(adData);
+  //       for (var j = 0; j < keys.length; j++) {
+  //         var key = keys[j];
 
-          // adDataオブジェクトの各キーについて処理
-          if (Array.isArray(adData[key]) && key === 'actions') {
-            var purchase = adData[key].find(action => action.action_type === 'offsite_conversion.fb_pixel_purchase');
-            rowData['conversions'] = purchase ? purchase.value : '';
-          } else if (key === 'ad_id' && adData[key]) {
-            rowData[key] = adData[key];
-            if (endpoint === 'ads') {
-              var image_url = getAdImageUrl(adData[key]);
-              rowData['image_url'] = image_url ? image_url : '';
-            }
-          } else if (Array.isArray(adData[key])) {
-            var conversionsArray = adData[key];
-            var formattedConversions = conversionsArray
-              .map(function (conversion) {
-                if (key === "conversions" && conversion.action_type === "contact_total") {
-                  return `${conversion.value}`;
-                } else if (key !== "conversions") {
-                  return `${conversion}`;
-                }
-              })
-              .join("");
-            rowData[key] = formattedConversions;
-          } else {
-            rowData[key] = adData[key];
-          }
-        }
+  //         // adDataオブジェクトの各キーについて処理
+  //         if (Array.isArray(adData[key]) && key === 'actions') {
+  //           var purchase = adData[key].find(action => action.action_type === 'offsite_conversion.fb_pixel_purchase');
+  //           rowData['conversions'] = purchase ? purchase.value : '';
+  //         } else if (key === 'ad_id' && adData[key]) {
+  //           rowData[key] = adData[key];
+  //           if (endpoint === 'ads') {
+  //             var image_url = getAdImageUrl(adData[key]);
+  //             rowData['image_url'] = image_url ? image_url : '';
+  //           }
+  //         } else if (Array.isArray(adData[key])) {
+  //           var conversionsArray = adData[key];
+  //           var formattedConversions = conversionsArray
+  //             .map(function (conversion) {
+  //               if (key === "conversions" && conversion.action_type === "contact_total") {
+  //                 return `${conversion.value}`;
+  //               } else if (key !== "conversions") {
+  //                 return `${conversion}`;
+  //               }
+  //             })
+  //             .join("");
+  //           rowData[key] = formattedConversions;
+  //         } else {
+  //           rowData[key] = adData[key];
+  //         }
+  //       }
 
-        if (header) {
-          for (var k = 0; k < header.length; k++) {
-            var key = header[k];
-            if (!(key in rowData)) {
-              rowData[key] = "";
-            }
-          }
-        }
+  //       if (header) {
+  //         for (var k = 0; k < header.length; k++) {
+  //           var key = header[k];
+  //           if (!(key in rowData)) {
+  //             rowData[key] = "";
+  //           }
+  //         }
+  //       }
 
-        dataToWrite.push(rowData);
-      }
-    }
+  //       dataToWrite.push(rowData);
+  //     }
+  //   }
 
-    Utilities.sleep(5);
-  }
+  //   Utilities.sleep(5);
+  // }
 
-  if (dataToWrite.length > 0) {
+  if (data.length > 0) {
+    // if (dataToWrite.length > 0) {
     var formattedData = [];
 
     if (header) {
-      for (var row = 0; row < dataToWrite.length; row++) {
-        var rowObject = dataToWrite[row];
+      for (var row = 0; row < data.length; row++) {
+        var rowObject = data[row];
         var formattedRow = [];
 
         for (var h = 0; h < header.length; h++) {
@@ -947,7 +961,9 @@ function facebook_writeFacebookAdsDataToSheet(sheetName, endpoint, fields, daySi
       }
     }
 
+    // データをスプレッドシートに書き込む
     sheet.getRange(lastRow + 1, 1, formattedData.length, header.length).setValues(formattedData);
+
   } else {
     // データが0件の場合
     sheet.getRange(1, 1).setValue("データなし");
@@ -955,11 +971,7 @@ function facebook_writeFacebookAdsDataToSheet(sheetName, endpoint, fields, daySi
     sheet.getRange(1, 3).setValue(dayUntil);
   }
 
-  // sheetNameシートを表示する
-  sheet.activate();
-
-  // 書き込んだデータの件数を返却
-  return dataToWrite.length;
+  return formattedData.length; // 書き込んだデータの件数を返却
 }
 
 // 画像URL取得
