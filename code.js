@@ -119,7 +119,8 @@ function facebook_getAdsForYesterday() {
 
   // 広告データを取得してスプレッドシートに書き込む
   var fields = "campaign_id,campaign_name,adset_id,adset_name,ad_id,ad_name,impressions,cpm,clicks,ctr,cpc,actions,spend,date_start,date_stop";
-  var adsCount = facebook_writeFacebookAdsDataToSheet(sheetName, endpoint, fields, daySince, dayUntil);
+  var adsCount = getAdsToSheet(daySince, dayUntil);
+  // var adsCount = facebook_writeFacebookAdsDataToSheet(sheetName, endpoint, fields, daySince, dayUntil);
 
   if (adsCount > 0) {
     console.log(sheetName + "情報 取得完了");
@@ -130,7 +131,76 @@ function facebook_getAdsForYesterday() {
   }
 
   // CRTレポート作成
-  makeCreativeReport();
+  // makeCreativeReport();
+}
+
+// 広告情報を取得してスプレッドシートに書き込む関数
+// 引数：開始日, 終了日
+// 戻り値：取得した広告の件数
+function getAdsToSheet(daySince, dayUntil) {
+  console.log(`getAdsToSheet(${daySince}, ${dayUntil})`);
+
+  // 引数が渡されていなければロギングして終了
+  if (!daySince || !dayUntil) {
+    console.log('日付が指定されていません。');
+    SpreadsheetApp.getUi().alert('日付が指定されていません。');
+    return 0;
+  }
+  
+  // Meta APIから広告データを取得する
+  var adsData = getAdsData(daySince, dayUntil);
+
+  if (!adsData || adsData.length === 0) {
+    console.log("広告データが取得できませんでした。");
+    SpreadsheetApp.getUi().alert("広告データが取得できませんでした。");
+    return 0;
+  }
+
+  // 広告データをスプレッドシートに書き込む
+  var sheetName = "広告";
+
+
+
+}
+
+// 広告データを取得する関数
+function getAdsData(daySince, dayUntil) {
+  console.log(`getAdsData(${daySince}, ${dayUntil})`);
+
+  // スクリプトプロパティから設定値を取得
+  const properties = PropertiesService.getScriptProperties();
+
+  // URLのパスまでを作成
+  const META_API_VERSION = properties.getProperty("META_API_VERSION");
+  const META_AD_ACCOUNT_ID = properties.getProperty("META_AD_ACCOUNT_ID");
+  const urlPath = `https://graph.facebook.com/${META_API_VERSION}/act_${META_AD_ACCOUNT_ID}/insights`;
+
+  // URLのクエリパラメータを作成
+  const META_ACCESS_TOKEN = properties.getProperty("META_ACCESS_TOKEN");
+  const params = {
+    access_token: META_ACCESS_TOKEN,
+    level: "ad",
+    fields: "campaign_id,campaign_name,adset_id,adset_name,ad_id,ad_name,impressions,cpm,clicks,ctr,cpc,actions,spend,date_start,date_stop",
+    sort: "spend_descending",
+    limit: 10000,
+    time_range: JSON.stringify({ since: daySince, until: dayUntil })
+  };
+
+  // APIを呼び出してデータを取得
+  const response = UrlFetchApp.fetch(urlPath + '?' + new URLSearchParams(params));
+
+  // レスポンスコードを確認
+  if (response.getResponseCode() !== 200) {
+    console.log(`APIリクエストに失敗しました。レスポンスコード: ${response.getResponseCode()}`);
+    console.log(`レスポンス: ${response.getContentText()}`);
+    return null;
+  }
+
+  const responseData = JSON.parse(response.getContentText());
+  const adsData = responseData.data || [];
+  console.log(`取得した広告データ件数: ${adsData.length}`);
+
+  return adsData;
 }
 
 // 前日の広告セット情報を取得する関数（定期実行用）
