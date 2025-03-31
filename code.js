@@ -12,7 +12,7 @@ function facebook_getCampaign(daySince, dayUntil) {
   var endpoint = "campaigns";
 
   console.log(sheetName + "情報 取得開始");
-  SpreadsheetApp.getActiveSpreadsheet().toast("しばらくお待ちください。", sheetName + "取得", 10);
+  SpreadsheetApp.getActiveSpreadsheet().toast("取得処理を開始しました。", sheetName + "取得", 10);
 
   // https://developers.facebook.com/docs/marketing-api/reference/ad-campaign-group/insights?locale=ja_JP
   var fields = "date_start,date_stop,account_id,account_name,campaign_id,campaign_name,impressions,inline_link_clicks,conversions,spend";
@@ -37,13 +37,12 @@ function facebook_getAdSets(daySince, dayUntil) {
   var endpoint = "adsets";
 
   console.log(sheetName + "情報 取得開始");
-  SpreadsheetApp.getActiveSpreadsheet().toast("しばらくお待ちください。", sheetName + "取得", 10);
 
   // https://developers.facebook.com/docs/marketing-api/reference/ad-campaign/insights?locale=ja_JP  
   var fields = "date_start,date_stop,adset_name,impressions,clicks,ctr,cpc,spend,actions";
 
   // 広告セットを取得
-  var adSetsCount = facebook_writeFacebookAdsDataToSheet(sheetName, endpoint, fields, daySince, dayUntil);
+  var adSetsCount = getAdSetsAndWriteSheet(sheetName, endpoint, fields, daySince, dayUntil);
 
   // 運用レポートに追記
   makeOperationReport();
@@ -62,7 +61,7 @@ function getAdSetsAndMakeOperationReport(daySince, dayUntil) {
     console.log('日付が指定されていません。');
     return;
   }
-  SpreadsheetApp.getActiveSpreadsheet().toast("しばらくお待ちください。", "運用レポート記入", 10);
+  SpreadsheetApp.getActiveSpreadsheet().toast("取得処理を開始しました。", "運用レポート記入", 10);
 
   var currentDate = new Date(daySince);
   var endDate = new Date(dayUntil);
@@ -77,10 +76,22 @@ function getAdSetsAndMakeOperationReport(daySince, dayUntil) {
     return row[0];
   });
   console.log(`operationReportDates: ${operationReportDates.join(',')}`);
-  
+
+  // 日数を計算
+  var totalDays = Math.ceil((endDate - currentDate) / (1000 * 60 * 60 * 24)) + 1;
+  var currentDayIndex = 0;
+
   while (currentDate <= endDate) {
+    currentDayIndex++;
     var formattedDate = Utilities.formatDate(currentDate, Session.getScriptTimeZone(), 'yyyy-MM-dd');
     console.log(`Processing date: ${formattedDate}`);
+
+    // 進捗をtoastで表示
+    SpreadsheetApp.getActiveSpreadsheet().toast(
+      `${formattedDate} のデータを取得中`,
+      `${currentDayIndex}日目 / ${totalDays}日間`,
+      5
+    );
 
     // すでに運用レポートに記入済みの日付の場合はスキップ
     if (operationReportDates.includes(formattedDate)) {
@@ -118,9 +129,7 @@ function facebook_getAdsForYesterday() {
   console.log(sheetName + "情報 取得開始");
 
   // 広告データを取得してスプレッドシートに書き込む
-  var fields = "campaign_id,campaign_name,adset_id,adset_name,ad_id,ad_name,impressions,cpm,clicks,ctr,cpc,actions,spend,date_start,date_stop";
-  var adsCount = getAdsToSheet(daySince, dayUntil);
-  // var adsCount = facebook_writeFacebookAdsDataToSheet(sheetName, endpoint, fields, daySince, dayUntil);
+  var adsCount = getAdsAndWriteSheet(daySince, dayUntil);
 
   if (adsCount > 0) {
     console.log(sheetName + "情報 取得完了");
@@ -129,13 +138,13 @@ function facebook_getAdsForYesterday() {
   }
 
   // CRTレポート作成
-  // makeCreativeReport();
+  makeCreativeReport();
 }
 
 // 広告情報を取得してスプレッドシートに書き込む関数
 // 引数：開始日, 終了日
 // 戻り値：取得した広告の件数
-function getAdsToSheet(daySince, dayUntil) {
+function getAdsAndWriteSheet(daySince, dayUntil) {
   console.log(`getAdsToSheet(${daySince}, ${dayUntil})`);
 
   // 引数が渡されていなければロギングして終了
@@ -144,7 +153,21 @@ function getAdsToSheet(daySince, dayUntil) {
     SpreadsheetApp.getUi().alert('日付が指定されていません。');
     return 0;
   }
-  
+
+  // 処理開始のトーストを表示
+  var sheetName = "広告";
+  SpreadsheetApp.getActiveSpreadsheet().toast("取得処理を開始しました。", sheetName + "取得", 10);
+
+  // 広告シートがあれば表示
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
+  if (sheet) {
+    sheet.activate();
+  } else {
+    // 広告シートがなければ作成
+    sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet(sheetName);
+    sheet.activate();
+  }
+
   // Meta APIから広告データを取得する
   const fields = "campaign_id,campaign_name,adset_id,adset_name,ad_id,ad_name,impressions,cpm,clicks,ctr,cpc,actions,spend,date_start,date_stop";
   var adsData = getAdsData(fields, daySince, dayUntil);
@@ -157,15 +180,18 @@ function getAdsToSheet(daySince, dayUntil) {
   // 広告データをスプレッドシートに書き込む
   var sheetName = "広告";
   var endpoint = "ads";
-  const writtenData = writeDataToSheet(sheetName, adsData, fields, endpoint, daySince, dayUntil);
+  const writtenDataCount = writeDataToSheet(sheetName, adsData, fields, endpoint, daySince, dayUntil);
 
-  if (writtenData) {
+  if (writtenDataCount) {
     console.log("取得した広告データをスプレッドシートに書き込みました。");
+    SpreadsheetApp.getUi().alert(`${writtenDataCount}件の広告データを取得しました。内容をご確認ください。`);
+
   } else {
     console.log("取得した広告データの書き込みに失敗しました。");
+    SpreadsheetApp.getUi().alert("広告データの書き込みに失敗しました。しばらくしてから再度お試しください。");
   }
 
-  return writtenData.length;
+  return writtenDataCount;
 }
 
 // 広告データを取得する関数
@@ -211,6 +237,52 @@ function getAdsData(fields, daySince, dayUntil) {
   return filteredAdsData;
 }
 
+// 広告セット情報を取得してスプレッドシートに書き込む関数
+// 引数：開始日, 終了日
+// 戻り値：取得した広告セットの件数
+function getAdSetsAndWriteSheet(sheetName, endpoint, fields, daySince, dayUntil) {
+  console.log(`getAdSetsAndWriteSheet(${sheetName}, ${endpoint}, ${fields}, ${daySince}, ${dayUntil})`);
+
+  // スプレッドシートを取得
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+
+  // シートが存在する場合は取得、存在しない場合は作成
+  var sheet = spreadsheet.getSheetByName(sheetName);
+  if (!sheet) {
+    sheet = spreadsheet.insertSheet(sheetName);
+  } else {
+    sheet.clear(); // 既存のデータをクリア
+  }
+
+  // シートをアクティブにする
+  sheet.activate();
+
+  // Meta APIから広告セットデータを取得
+  const adSetsData = getAdSetsData(fields, daySince, dayUntil);
+
+  if (!adSetsData || adSetsData.length === 0) {
+    console.log("広告セットデータが取得できませんでした。");
+    sheet.getRange(1, 1).setValue("データなし");
+    sheet.getRange(1, 2).setValue(daySince);
+    sheet.getRange(1, 3).setValue(dayUntil);
+    return 0;
+  }
+
+// 広告セットデータをスプレッドシートに書き込む
+var sheetName = "広告セット";
+var endpoint = "adsets";
+const writtenDataCount = writeDataToSheet(sheetName, adSetsData, fields, endpoint, daySince, dayUntil);
+
+if (writtenDataCount) {
+  console.log(writtenDataCount + "件の広告セットデータをスプレッドシートに書き込みました。");
+} else {
+  console.log("取得した広告セットデータの書き込みに失敗しました。");
+  SpreadsheetApp.getUi().alert("広告セットデータの書き込みに失敗しました。しばらくしてから再度お試しください。");
+}
+
+return writtenDataCount;
+}
+
 // URLのクエリパラメータを作成する関数
 function concatUrlParams(params) {
 
@@ -223,6 +295,49 @@ function concatUrlParams(params) {
   return urlParams;
 }
 
+// 広告セットデータを取得する関数
+function getAdSetsData(fields, daySince, dayUntil) {
+  console.log(`getAdSetsData(${fields}, ${daySince}, ${dayUntil})`);
+
+  // スクリプトプロパティから設定値を取得
+  const properties = PropertiesService.getScriptProperties();
+
+  // URLのパスまでを作成
+  const META_API_VERSION = properties.getProperty("META_API_VERSION");
+  const META_AD_ACCOUNT_ID = properties.getProperty("META_AD_ACCOUNT_ID");
+  const urlPath = `https://graph.facebook.com/${META_API_VERSION}/act_${META_AD_ACCOUNT_ID}/insights`;
+
+  // URLのクエリパラメータを作成
+  const META_ACCESS_TOKEN = properties.getProperty("META_ACCESS_TOKEN");
+  const params = {
+    access_token: META_ACCESS_TOKEN,
+    level: "adset",
+    fields: fields,
+    sort: "spend_descending",
+    limit: 10000,
+    time_range: JSON.stringify({ since: daySince, until: dayUntil })
+  };
+
+  // APIを呼び出してデータを取得
+  const response = UrlFetchApp.fetch(urlPath + '?' + concatUrlParams(params));
+
+  // レスポンスコードを確認
+  if (response.getResponseCode() !== 200) {
+    console.log(`getAdSetsData APIリクエストに失敗しました。レスポンスコード: ${response.getResponseCode()}`);
+    console.log(`getAdSetsData レスポンス: ${response.getContentText()}`);
+    return null;
+  }
+
+  const responseData = JSON.parse(response.getContentText());
+  const adSetsData = responseData.data || [];
+
+  // spendが0のデータを除外
+  const filteredAdSetsData = adSetsData.filter(adSet => adSet.spend > 0);
+
+  console.log(`getAdSetsData 取得した広告セットデータ件数: ${filteredAdSetsData.length}`);
+  return filteredAdSetsData;
+}
+
 // 前日の広告セット情報を取得する関数（定期実行用）
 function facebook_getAdSetsForYesterday() {
   console.log("facebook_getAdSetsForYesterday()");
@@ -231,20 +346,21 @@ function facebook_getAdSetsForYesterday() {
   var endpoint = "adsets";
   console.log(sheetName + "情報 取得開始");
 
-  // https://developers.facebook.com/docs/marketing-api/reference/ad-campaign/insights?locale=ja_JP  
+  // https://developers.facebook.com/docs/marketing-api/reference/ad-campaign/insights?locale=ja_JP
   var fields = "date_start,date_stop,adset_name,impressions,clicks,ctr,cpc,spend,actions";
 
   // 昨日の日付を取得
   var daySince = facebook_getDateNDaysAgo(1); // 開始日
   var dayUntil = facebook_getDateNDaysAgo(1); // 終了日
 
-  facebook_writeFacebookAdsDataToSheet(sheetName, endpoint, fields, daySince, dayUntil);
+  var writtenAdSetsCount = getAdSetsAndWriteSheet(sheetName, endpoint, fields, daySince, dayUntil);
 
+  // facebook_writeFacebookAdsDataToSheet(sheetName, endpoint, fields, daySince, dayUntil);
   // 運用レポートに広告セットシートのデータを整形して書き込む
   makeOperationReport();
 
   // メッセージを表示
-  console.log(sheetName + "情報 取得完了");
+  console.log(`${writtenAdSetsCount}件の${sheetName}情報を取得しました`);
 }
 
 // 広告情報を取得する関数
@@ -261,7 +377,7 @@ function facebook_getAds(daySince, dayUntil) {
   var endpoint = "ads";
 
   console.log(sheetName + "情報 取得開始");
-  SpreadsheetApp.getActiveSpreadsheet().toast("しばらくお待ちください。", sheetName + "取得", 10);
+  SpreadsheetApp.getActiveSpreadsheet().toast("取得処理を開始しました。", sheetName + "取得", 10);
 
   // https://developers.facebook.com/docs/marketing-api/reference/adgroup/insights/
   var fields = "campaign_id,campaign_name,adset_id,adset_name,ad_id,ad_name,impressions,cpm,clicks,ctr,cpc,actions,spend,date_start,date_stop";
@@ -285,7 +401,7 @@ function makeCreativeReport() {
   var adSheet = spreadsheet.getSheetByName('広告');
   var reportSheet = spreadsheet.getSheetByName(reportSheetName);
 
-  SpreadsheetApp.getActiveSpreadsheet().toast("しばらくお待ちください。", reportSheetName + "作成", 10);
+  SpreadsheetApp.getActiveSpreadsheet().toast("作成を開始しました。", reportSheetName + "作成", 10);
 
   // 「CRTレポート」シートがなければ作成、あれば取得する
   if (!reportSheet) {
@@ -353,8 +469,15 @@ function makeCreativeReport() {
   }
 
   var startRow = 3; // 最初のデータ行は3行目から開始
+  var totalAdSets = Object.keys(adSets).length;
+  var currentAdSetIndex = 0;
 
   for (var adSetId in adSets) {
+
+    currentAdSetIndex++;
+    SpreadsheetApp.getActiveSpreadsheet().toast(
+      "各広告セットの分析結果を記入中", `${currentAdSetIndex} 件目 / ${totalAdSets} 件中`, 5);
+
     var adSet = adSets[adSetId];
     var ads = adSet.ads;
 
@@ -689,7 +812,7 @@ function facebook_getData(endpoint) {
   var queryParams = {
     fields: "id,name", // リクエストで取得するフィールド
     access_token: accessToken, // アクセストークン
-    limit: 10000 // 取得するデータの上限
+    limit: 10000                       // 取得するデータの上限
   };
 
   // クエリパラメータをURLエンコードして追加
@@ -883,9 +1006,17 @@ function writeDataToSheet(sheetName, data, fields, endpoint, daySince, dayUntil)
 
   // 書き込むデータを格納する配列
   var dataToWrite = [];
+  var dataCount = data.length; // データの件数
 
-  // 各キャンペーンのデータを取得して配列に格納
-  for (var i = 0; i < data.length; i++) {
+  // 各データの値を整形して配列に格納
+  for (var i = 0; i < dataCount; i++) {
+
+    // 何件目の広告データを処理するかをtoastで表示
+    if (endpoint === 'ads') {
+      SpreadsheetApp.getActiveSpreadsheet().toast(
+      sheetName + "データを処理中", `${i + 1} 件目 / ${dataCount} 件`, 5);
+    }
+
     var adData = data[i];
     var rowData = {};
 
@@ -895,9 +1026,14 @@ function writeDataToSheet(sheetName, data, fields, endpoint, daySince, dayUntil)
       var key = keys[j];
 
       // adDataオブジェクトの各キーについて処理
-      if (Array.isArray(adData[key]) && key === 'actions') {
+      if (Array.isArray(adData[key]) && key === 'actions') { // 広告のconversions
         var purchase = adData[key].find(action => action.action_type === 'offsite_conversion.fb_pixel_purchase');
         rowData['conversions'] = purchase ? purchase.value : '';
+
+      } else if (key === 'actions' && adData[key].action_type === 'web_in_store_purchase') { // 広告セットのconversions
+        var purchase = adData[key].value;
+        rowData['conversions'] = purchase ? purchase.value : '';
+
       } else if (key === 'ad_id' && adData[key]) {
         rowData[key] = adData[key];
         if (endpoint === 'ads') {

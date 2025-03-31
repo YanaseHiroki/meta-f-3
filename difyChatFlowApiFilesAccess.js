@@ -83,6 +83,7 @@ function difyChatflowApiFilesAccess(data, adSetId, adSetName) {
     
     // StatusCodeによって処理分岐
     if (response.getResponseCode() === 200) {
+    try {
         const responseJson = JSON.parse(responseText);
         Logger.log('responseJson: ' + responseJson);
         Logger.log('responseJson.answer: ' + responseJson.answer);
@@ -108,43 +109,81 @@ function difyChatflowApiFilesAccess(data, adSetId, adSetName) {
         Logger.log('今後の示唆: ' + answerJson.future_implications);
         // Logger.log('画像情報: ' + answerJson.img_info);
         console.log('difyChatflowApi return answerJson: ' + JSON.stringify(answerJson));
-        
+
         return answerJson;
+    } catch (error) {
+        Logger.log("JSON パースエラー: " + error.message);
+        Logger.log("パース対象の文字列: " + responseText);
+
+        // エラー内容を「現状整理」と「今後の示唆」に記録
+        const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+        const sheet = spreadsheet.getSheetByName("CRTレポート");
+        const row = findRowByAdSetId(sheet, adSetId); // 広告セットIDに対応する行を取得する関数を作成
+
+        if (row) {
+            sheet.getRange(row, 3).setValue("エラー: 分析結果の文章の処理に失敗しました。" ); // 現状整理の列
+            sheet.getRange(row, 4).setValue("エラーの詳細: "+ error.message); // 今後の示唆の列
+        }
+
+        return null; // 処理を続行
+    }
     } else {
         // エラー処理
-
         Logger.log("difyChatflowApi Error Code: " + response.getResponseCode());
+
+        // エラー内容を「現状整理」と「今後の示唆」に記録
+        const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+        const sheet = spreadsheet.getSheetByName("CRTレポート");
+        const row = findRowByAdSetId(sheet, adSetId); // 広告セットIDに対応する行を取得する関数を作成
+
+        if (row) {
+            sheet.getRange(row, 3).setValue("エラー: 分析結果の取得に失敗しました。"); // 現状整理の列
+            sheet.getRange(row, 4).setValue("エラーコード: " + response.getResponseCode()); // 今後の示唆の列
+        }
+
+        return null; // 処理を続行
     }
+}
+
+// 広告セットIDに対応する行を取得する関数
+function findRowByAdSetId(sheet, adSetId) {
+    const data = sheet.getDataRange().getValues();
+    for (let i = 1; i < data.length; i++) {
+        if (data[i][1] === adSetId) { // B列に広告セットIDがあると仮定
+            return i + 1; // 行番号を返す（1-based index）
+        }
+    }
+    return null; // 該当なし
 }
 
 // 会話IDを「会話ID管理」シートに保存する関数
 function saveConversationId(adSetName, adSetId, conversationId) {
     var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = spreadsheet.getSheetByName('会話ID管理');
-    
+
     if (!sheet) {
       sheet = spreadsheet.insertSheet('会話ID管理');
       sheet.appendRow(['作成日時', '広告セット名', '広告セットID', '会話ID']);
     }
-  
+
     var now = new Date();
     sheet.appendRow([now, adSetName, adSetId, conversationId]);
-  }
-  
-  // 広告セットIDに対応する会話IDを取得する関数
-  function getConversationId(adSetId) {
-    var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-    var sheet = spreadsheet.getSheetByName('会話ID管理');
-    
-    if (!sheet) {
-      return null;
-    }
-  
-    var data = sheet.getDataRange().getValues();
-    for (var i = 1; i < data.length; i++) {
-      if (data[i][2] === adSetId) {
-        return data[i][3];
-      }
-    }
+}
+
+// 広告セットIDに対応する会話IDを取得する関数
+function getConversationId(adSetId) {
+var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+var sheet = spreadsheet.getSheetByName('会話ID管理');
+
+if (!sheet) {
     return null;
-  }
+}
+
+var data = sheet.getDataRange().getValues();
+for (var i = 1; i < data.length; i++) {
+    if (data[i][2] === adSetId) {
+    return data[i][3];
+    }
+}
+return null;
+}

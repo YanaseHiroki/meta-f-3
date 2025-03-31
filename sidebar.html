@@ -18,24 +18,31 @@
           return `${year}-${month}-${day}`;
         };
 
-        // 広告取得・CRTレポート作成の初期値設定
-        document.getElementById("start-date-ads").value = formatDate(oneMonthAgo);
+        // 広告取得の初期値設定
+        document.getElementById("start-date-ads").value = formatDate(yesterday);
         document.getElementById("end-date-ads").value = formatDate(yesterday);
-
-        // 広告セット取得の初期値設定
-        document.getElementById("start-date-adsets").value = formatDate(yesterday);
-        document.getElementById("end-date-adsets").value = formatDate(yesterday);
 
         // 運用レポート作成の初期値設定
         document.getElementById("start-date-operation").value = formatDate(yesterday);
         document.getElementById("end-date-operation").value = formatDate(yesterday);
-
-        // キャンペーン取得の初期値設定
-        document.getElementById("start-date-campaign").value = formatDate(oneMonthAgo);
-        document.getElementById("end-date-campaign").value = formatDate(yesterday);
       };
 
-      // facebook_getAdsを実行する関数
+      // クリエイティブレポートを作成する関数
+      function runMakeCreativeReport() {
+
+        console.log("クリエイティブレポートを作成します。");
+
+        google.script.run
+          .withSuccessHandler(() => {
+            console.log("クリエイティブレポートの作成が完了しました。");
+          })
+          .withFailureHandler((error) => {
+            console.log(`エラーが発生しました: ${error.message}`);
+          })
+          .makeCreativeReport();
+      }
+
+      // 広告データを取得する関数
       function runGetAds() {
         let startDate = document.getElementById("start-date-ads").value;
         let endDate = document.getElementById("end-date-ads").value;
@@ -49,10 +56,10 @@
           .withFailureHandler((error) => {
             console.log(`エラーが発生しました: ${error.message}`);
           })
-          .facebook_getAds(startDate, endDate);
+          .getAdsAndWriteSheet(startDate, endDate);
       }
 
-      // facebook_getAdSetsを実行する関数
+      // 広告セットデータを取得する関数
       function runGetAdSets() {
         let startDate = document.getElementById("start-date-adsets").value;
         let endDate = document.getElementById("end-date-adsets").value;
@@ -66,10 +73,10 @@
           .withFailureHandler((error) => {
             console.log(`エラーが発生しました: ${error.message}`);
           })
-          .facebook_getAdSets(startDate, endDate);
+          .getAdSetsAndWriteSheet(startDate, endDate);
       }
 
-      // facebook_getCampaignを実行する関数
+      // キャンペーンデータを実行する関数
       function runGetCampaign() {
         let startDate = document.getElementById("start-date-campaign").value;
         let endDate = document.getElementById("end-date-campaign").value;
@@ -86,7 +93,7 @@
           .facebook_getCampaign(startDate, endDate);
       }
 
-      // getAdSetsAndMakeOperationReportを実行する関数
+      // 運用レポートを作成する関数
       function runGetAdSetsAndMakeOperationReport() {
         let startDate = document.getElementById("start-date-operation").value;
         let endDate = document.getElementById("end-date-operation").value;
@@ -103,63 +110,82 @@
           .getAdSetsAndMakeOperationReport(startDate, endDate);
       }
     </script>
+    <style>
+      .date-range-input {
+        margin: 1.5rem 1.5rem 0 1.5rem; /* 上・右・下・左のマージン */
+      }
+
+      .exe-button {
+        text-align: right;
+        padding-right: 1rem;
+        margin-bottom: 2rem;
+      }
+
+      .exe-button button {
+        padding: 0.3rem 1rem; /* パディング */
+        border-radius: 0.5rem; /* 角を丸くする */
+        margin-top: 2rem; /* 上のマージン */
+        cursor: pointer; /* カーソルをポインターにする */
+      }
+
+      body hr {
+        border-color: #eee;
+        background-color: #eee; /* グレー */
+        margin: 3rem 0.5rem; /* 上下・左右のマージン */
+      }
+
+      body h3 {
+        margin-bottom: 1.5rem; /* 上下のマージン */
+      }
+
+      body p {
+        margin-left: 0.5rem; /* 左のマージン */
+      }
+    </style>
   </head>
 
   <body>
+    <br>
+    <!-- 広告取得 -->
+    <h3>広告取得</h3>
+    <p>指定された期間の広告データ取得</p>
+    <div class="date-range-input">
+      <label>開始日 </label>
+      <input type="date" id="start-date-ads"><br><br>
+      <label>終了日 </label>
+      <input type="date" id="end-date-ads">
+    </div>
+
+    <div class="exe-button">
+      <button onclick="runGetAds()">実行</button>
+    </div>
+    <hr>
+
     <!-- クリエイティブレポート -->
-    <h4>CRTレポート作成</h4>
+    <h3>CRTレポート作成</h3>
+    <p>広告データをもとにCRTレポート作成</p>
 
-    <label>開始日: </label>
-    <input type="date" id="start-date-ads"><br><br>
-    
-    <label>終了日: </label>
-    <input type="date" id="end-date-ads"><br><br>
-
-    <button onclick="runGetAds()">実行</button><br><br>
+    <div class="exe-button">
+      <button onclick="runMakeCreativeReport()">実行</button>
+    </div>
+    <hr>
 
     <!-- 運用レポート -->
-    <h4>運用レポート記入</h4>
+    <h3>運用レポート記入</h3>
 
-    <label>開始日: </label>
-    <input type="date" id="start-date-operation"><br><br>
+    <p>期間内の各日の運用レポート記入</p>
 
-    <label>終了日: </label>
-    <input type="date" id="end-date-operation"><br><br>
+    <div class="date-range-input">
+      <label>開始日 </label>
+      <input type="date" id="start-date-operation"><br><br>
+      <label>終了日 </label>
+      <input type="date" id="end-date-operation">
+    </div>
 
-    <button onclick="runGetAdSetsAndMakeOperationReport()">実行</button><br><br>
-
-    <!-- 広告取得 -->
-    <h4>広告取得</h4>
-
-    <label>開始日: </label>
-    <input type="date" id="start-date-ads"><br><br>
-
-    <label>終了日: </label>
-    <input type="date" id="end-date-ads"><br><br>
-
-    <button onclick="runGetAds()">実行</button><br><br>
-
-    <!-- 広告セット -->
-    <h4>広告セット取得</h4>
-
-    <label>開始日: </label>
-    <input type="date" id="start-date-adsets"><br><br>
-
-    <label>終了日: </label>
-    <input type="date" id="end-date-adsets"><br><br>
-
-    <button onclick="runGetAdSets()">実行</button><br><br>
-
-    <!-- キャンペーン -->
-    <h4>キャンペーン取得</h4>
-
-    <label>開始日: </label>
-    <input type="date" id="start-date-campaign"><br><br>
-
-    <label>終了日: </label>
-    <input type="date" id="end-date-campaign"><br><br>
-
-    <button onclick="runGetCampaign()">実行</button>
+    <div class="exe-button">
+      <button onclick="runGetAdSetsAndMakeOperationReport()">実行</button>
+    </div>
+    <hr>
 
   </body>
 </html>

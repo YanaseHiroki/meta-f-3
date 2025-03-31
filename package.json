@@ -1,0 +1,33 @@
+{
+  "name": "your-project-name",
+  "version": "1.0.0",
+  "description": "A project using clasp with tests",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "dependencies": {
+    "clasp": "^latest-version"
+  },
+  "devDependencies": {
+    "jest": "^latest-version"
+  },
+  "jest": {
+    "testEnvironment": "node"
+  },
+  "directories": {
+    "test": "tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YanaseHiroki/meta-f-3.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/YanaseHiroki/meta-f-3/issues"
+  },
+  "homepage": "https://github.com/YanaseHiroki/meta-f-3#readme"
+}
