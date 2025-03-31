@@ -124,10 +124,8 @@ function facebook_getAdsForYesterday() {
 
   if (adsCount > 0) {
     console.log(sheetName + "情報 取得完了");
-    SpreadsheetApp.getUi().alert(`${adsCount}件の広告データを取得しました。`);
   } else {
     console.log(sheetName + "情報がありませんでした。");
-    SpreadsheetApp.getUi().alert("前日の広告データはありませんでした。");
   }
 
   // CRTレポート作成
@@ -187,7 +185,7 @@ function getAdsData(daySince, dayUntil) {
   };
 
   // APIを呼び出してデータを取得
-  const response = UrlFetchApp.fetch(urlPath + '?' + new URLSearchParams(params));
+  const response = UrlFetchApp.fetch(urlPath + '?' + concatUrlParams(params));
 
   // レスポンスコードを確認
   if (response.getResponseCode() !== 200) {
@@ -201,6 +199,18 @@ function getAdsData(daySince, dayUntil) {
   console.log(`取得した広告データ件数: ${adsData.length}`);
 
   return adsData;
+}
+
+// URLのクエリパラメータを作成する関数
+function concatUrlParams(params) {
+
+  const urlParams = Object.keys(params).map(key => {
+    return encodeURIComponent(key) + '=' + encodeURIComponent(params[key]);
+  }
+  ).join('&');
+
+  console.log(`URLパラメータ: ${urlParams}`);
+  return urlParams;
 }
 
 // 前日の広告セット情報を取得する関数（定期実行用）
