@@ -203,9 +203,12 @@ function getAdsData(fields, daySince, dayUntil) {
 
   const responseData = JSON.parse(response.getContentText());
   const adsData = responseData.data || [];
-  console.log(`getAdsData 取得した広告データ件数: ${adsData.length}`);
 
-  return adsData;
+  // spendが0のデータを除外
+  const filteredAdsData = adsData.filter(ad => ad.spend > 0);
+
+  console.log(`getAdsData 取得した広告データ件数: ${filteredAdsData.length}`);
+  return filteredAdsData;
 }
 
 // URLのクエリパラメータを作成する関数
@@ -685,7 +688,8 @@ function facebook_getData(endpoint) {
   var apiUrl = `https://graph.facebook.com/${apiVersion}/act_${adAccountId}/${endpoint}`;
   var queryParams = {
     fields: "id,name", // リクエストで取得するフィールド
-    access_token: accessToken // アクセストークン
+    access_token: accessToken, // アクセストークン
+    limit: 10000 // 取得するデータの上限
   };
 
   // クエリパラメータをURLエンコードして追加
@@ -881,69 +885,60 @@ function writeDataToSheet(sheetName, data, fields, endpoint, daySince, dayUntil)
   var dataToWrite = [];
 
   // 各キャンペーンのデータを取得して配列に格納
-  // for (var c = 0; c < data.length; c++) {
-  //   var adsData = getFacebookAdsDataForCampaign(data[c].id, fields, daySince, dayUntil);
+  for (var i = 0; i < data.length; i++) {
+    var adData = data[i];
+    var rowData = {};
 
-  //   if (adsData && adsData.length > 0) {
-  //     for (var i = 0; i < adsData.length; i++) {
-  //       var adData = adsData[i];
-  //       var rowData = {};
+    // 各フィールドに対応する値をキーとともに格納
+    var keys = Object.keys(adData);
+    for (var j = 0; j < keys.length; j++) {
+      var key = keys[j];
 
-  //       // 各フィールドに対応する値をキーとともに格納
-  //       var keys = Object.keys(adData);
-  //       for (var j = 0; j < keys.length; j++) {
-  //         var key = keys[j];
+      // adDataオブジェクトの各キーについて処理
+      if (Array.isArray(adData[key]) && key === 'actions') {
+        var purchase = adData[key].find(action => action.action_type === 'offsite_conversion.fb_pixel_purchase');
+        rowData['conversions'] = purchase ? purchase.value : '';
+      } else if (key === 'ad_id' && adData[key]) {
+        rowData[key] = adData[key];
+        if (endpoint === 'ads') {
+          var image_url = getAdImageUrl(adData[key]);
+          rowData['image_url'] = image_url ? image_url : '';
+        }
+      } else if (Array.isArray(adData[key])) {
+        var conversionsArray = adData[key];
+        var formattedConversions = conversionsArray
+          .map(function (conversion) {
+            if (key === "conversions" && conversion.action_type === "contact_total") {
+              return `${conversion.value}`;
+            } else if (key !== "conversions") {
+              return `${conversion}`;
+            }
+          })
+          .join("");
+        rowData[key] = formattedConversions;
+      } else {
+        rowData[key] = adData[key];
+      }
+    }
 
-  //         // adDataオブジェクトの各キーについて処理
-  //         if (Array.isArray(adData[key]) && key === 'actions') {
-  //           var purchase = adData[key].find(action => action.action_type === 'offsite_conversion.fb_pixel_purchase');
-  //           rowData['conversions'] = purchase ? purchase.value : '';
-  //         } else if (key === 'ad_id' && adData[key]) {
-  //           rowData[key] = adData[key];
-  //           if (endpoint === 'ads') {
-  //             var image_url = getAdImageUrl(adData[key]);
-  //             rowData['image_url'] = image_url ? image_url : '';
-  //           }
-  //         } else if (Array.isArray(adData[key])) {
-  //           var conversionsArray = adData[key];
-  //           var formattedConversions = conversionsArray
-  //             .map(function (conversion) {
-  //               if (key === "conversions" && conversion.action_type === "contact_total") {
-  //                 return `${conversion.value}`;
-  //               } else if (key !== "conversions") {
-  //                 return `${conversion}`;
-  //               }
-  //             })
-  //             .join("");
-  //           rowData[key] = formattedConversions;
-  //         } else {
-  //           rowData[key] = adData[key];
-  //         }
-  //       }
+    if (header) {
+      for (var k = 0; k < header.length; k++) {
+        var key = header[k];
+        if (!(key in rowData)) {
+          rowData[key] = "";
+        }
+      }
+    }
 
-  //       if (header) {
-  //         for (var k = 0; k < header.length; k++) {
-  //           var key = header[k];
-  //           if (!(key in rowData)) {
-  //             rowData[key] = "";
-  //           }
-  //         }
-  //       }
+    dataToWrite.push(rowData);
+  }
 
-  //       dataToWrite.push(rowData);
-  //     }
-  //   }
-
-  //   Utilities.sleep(5);
-  // }
-
-  if (data.length > 0) {
-    // if (dataToWrite.length > 0) {
+    if (dataToWrite.length > 0) {
     var formattedData = [];
 
     if (header) {
-      for (var row = 0; row < data.length; row++) {
-        var rowObject = data[row];
+      for (var row = 0; row < dataToWrite.length; row++) {
+        var rowObject = dataToWrite[row];
         var formattedRow = [];
 
         for (var h = 0; h < header.length; h++) {
