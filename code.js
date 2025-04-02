@@ -763,9 +763,9 @@ function makeOperationReport() {
 
       // 背景色を設定
       const lastRow = operationReportSheet.getLastRow() - 22;
-      operationReportSheet.getRange(existingRow, colIndex, lastRow, 10).setBackground('#FFFFFF'); // 値を入れた範囲を白色
-      operationReportSheet.getRange(existingRow, colIndex + 7, lastRow, 1).setBackground('#fce4d6'); // 媒体CPAをオレンジ
-      operationReportSheet.getRange(existingRow, colIndex + 10, lastRow, 1).setBackground('#fce4d6'); // 実CPAをオレンジ
+      operationReportSheet.getRange(existingRow, colIndex, 1, 10).setBackground('#FFFFFF'); // 値を入れた範囲を白色
+      operationReportSheet.getRange(existingRow, colIndex + 7, 1, 1).setBackground('#fce4d6'); // 媒体CPAをオレンジ
+      operationReportSheet.getRange(existingRow, colIndex + 10, 1, 1).setBackground('#fce4d6'); // 実CPAをオレンジ
 
       colIndex += 11; // 広告セット同士の間に不要な空の列がないようにする
     }
