@@ -68,7 +68,7 @@ function getAdSetsAndMakeOperationReport(daySince, dayUntil) {
 
   // 運用レポートに記入済みの日付のリスト
   var operationReportSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('運用レポート');
-  var operationReportData = operationReportSheet.getRange("B23:B" + operationReportSheet.getLastRow()).getValues();
+  var operationReportData = operationReportSheet.getRange("B13:B" + operationReportSheet.getLastRow()).getValues();
   var operationReportDates = operationReportData.map(row => {
     if (row[0] instanceof Date) {
       return Utilities.formatDate(row[0], Session.getScriptTimeZone(), 'yyyy-MM-dd');
@@ -484,13 +484,11 @@ function makeCreativeReport() {
 
   var startRow = 3;
   var totalAdSets = sortedAdSetIds.length;
-  var currentAdSetIndex = 0;
 
-  for (var adSetId in adSets) {
-
-    currentAdSetIndex++;
+  for (var i = 0; i < sortedAdSetIds.length; i++) {
+    var adSetId = sortedAdSetIds[i];
     SpreadsheetApp.getActiveSpreadsheet().toast(
-      "各広告セットの分析結果を記入中", `${currentAdSetIndex} 件目 / ${totalAdSets} 件中`, 5);
+      "各広告セットの分析結果を記入中", `${i + 1} 件目 / ${totalAdSets} 件中`, 5);
 
     var adSet = adSets[adSetId];
     var ads = adSet.ads;
@@ -590,6 +588,10 @@ function makeOperationReport() {
     return;
   }
 
+  // 表のタイトル（商材名）の行番号
+  const tableTopRow = 10;
+  const adSetWidth = 11; // 広告セット1つ分の列数
+
   // シート情報の読み込み
   const lastRow = adSetSheet.getLastRow();
   const lastColumn = adSetSheet.getLastColumn();
@@ -659,7 +661,7 @@ function makeOperationReport() {
 
   // 運用レポートシートのデータを取得
   const operationReportData = operationReportSheet.getDataRange().getValues();
-  let startRow = 23;
+  let startRow = tableTopRow + 3;
 
   // 既存のdate_stopをチェック
   let existingRow = -1;
@@ -745,17 +747,17 @@ function makeOperationReport() {
         }
       }
 
-      // 広告セット名をN21, Y21, AJ21などに設定
-      const adSetNameRange = operationReportSheet.getRange(21, colIndex, 1, 11);
+      // 広告セット名をN11, Y11, AJ11などに設定
+      const adSetNameRange = operationReportSheet.getRange(tableTopRow + 1, colIndex, 1, adSetWidth);
       adSetNameRange.setValue(adset_name);
       adSetNameRange.setBackground('#ADD8E6'); // 水色背景
       adSetNameRange.merge();
 
-      // C22:M22をN22:X22, Y22:AI22, AJ22:AT22などにコピー
-      const headerRange = operationReportSheet.getRange(22, 3, 1, 11);
-      headerRange.copyTo(operationReportSheet.getRange(22, colIndex, 1, 11));
+      // C12:M12をN12:X12, Y12:AI12, AJ12:AT12などにコピー
+      const headerRange = operationReportSheet.getRange(tableTopRow + 2, 3, 1, 11);
+      headerRange.copyTo(operationReportSheet.getRange(tableTopRow + 2, colIndex, 1, adSetWidth));
 
-      // 広告セットの値をN23:X23, Y23:AI23, AJ23:AT23などに設定
+      // 広告セットの値をN13:X13, Y13:AI13, AJ13:AT13などに設定
       operationReportSheet.getRange(existingRow, colIndex, 1, adSetRow.length).setValues([adSetRow]);
 
       // 各項目の形式を指定
@@ -772,12 +774,12 @@ function makeOperationReport() {
       operationReportSheet.getRange(existingRow, colIndex + 10).setNumberFormat('"¥"#,##0'); // 実CPA
 
       // 罫線を引く
-      const rangeToBorder = operationReportSheet.getRange(21, 2, existingRow - 20, colIndex + 9);
+      const rangeToBorder = operationReportSheet.getRange(tableTopRow + 1, 2, existingRow - tableTopRow, colIndex + 9);
       rangeToBorder.setBorder(true, true, true, true, true, true);
 
       // 背景色を設定
-      const lastRow = operationReportSheet.getLastRow() - 22;
-      operationReportSheet.getRange(existingRow, colIndex, 1, 10).setBackground('#FFFFFF'); // 値を入れた範囲を白色
+      const lastRow = operationReportSheet.getLastRow() - 12;
+      operationReportSheet.getRange(existingRow, colIndex, 1, adSetWidth).setBackground('#FFFFFF'); // 値を入れた範囲を白色
       operationReportSheet.getRange(existingRow, colIndex + 7, 1, 1).setBackground('#fce4d6'); // 媒体CPAをオレンジ
       operationReportSheet.getRange(existingRow, colIndex + 10, 1, 1).setBackground('#fce4d6'); // 実CPAをオレンジ
 
@@ -786,7 +788,9 @@ function makeOperationReport() {
   }
 
   // データをB列の値の昇順にソート
-  const rangeToSort = operationReportSheet.getRange(23, 2, operationReportSheet.getLastRow() - 22, operationReportSheet.getLastColumn() - 1);
+  const rangeToSort = operationReportSheet.getRange(
+    tableTopRow + 3, 2,
+    operationReportSheet.getLastRow() - tableTopRow - 2, operationReportSheet.getLastColumn() - 1);
   const sortedData = rangeToSort.getValues().sort((a, b) => {
     const dateA = new Date(a[0]);
     const dateB = new Date(b[0]);
