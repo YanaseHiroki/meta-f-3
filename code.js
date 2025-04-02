@@ -39,7 +39,7 @@ function facebook_getAdSets(daySince, dayUntil) {
   console.log(sheetName + "情報 取得開始");
 
   // https://developers.facebook.com/docs/marketing-api/reference/ad-campaign/insights?locale=ja_JP  
-  var fields = "date_start,date_stop,adset_name,impressions,inline_link_clicks,inline_link_click_ctr,cpc,spend,actions";
+  var fields = "date_start,date_stop,adset_name,impressions,inline_link_clicks,inline_link_click_ctr,cost_per_unique_inline_link_click,spend,actions";
 
   // 広告セットを取得
   var adSetsCount = getAdSetsAndWriteSheet(sheetName, endpoint, fields, daySince, dayUntil);
@@ -169,7 +169,7 @@ function getAdsAndWriteSheet(daySince, dayUntil) {
   }
 
   // Meta APIから広告データを取得する
-  const fields = "campaign_id,campaign_name,adset_id,adset_name,ad_id,ad_name,impressions,cpm,inline_link_clicks,inline_link_click_ctr,cpc,actions,spend,date_start,date_stop";
+  const fields = "campaign_id,campaign_name,adset_id,adset_name,ad_id,ad_name,impressions,cpm,inline_link_clicks,inline_link_click_ctr,cost_per_unique_inline_link_click,actions,spend,date_start,date_stop";
   var adsData = getAdsData(fields, daySince, dayUntil);
 
   if (!adsData || adsData.length === 0) {
@@ -354,7 +354,7 @@ function facebook_getAdSetsForYesterday() {
   console.log(sheetName + "情報 取得開始");
 
   // https://developers.facebook.com/docs/marketing-api/reference/ad-campaign/insights?locale=ja_JP
-  var fields = "date_start,date_stop,adset_name,impressions,inline_link_clicks,inline_link_click_ctr,cpc,spend,actions";
+  var fields = "date_start,date_stop,adset_name,impressions,inline_link_clicks,inline_link_click_ctr,cost_per_unique_inline_link_click,spend,actions";
 
   // 昨日の日付を取得
   var daySince = facebook_getDateNDaysAgo(1); // 開始日
@@ -387,7 +387,7 @@ function facebook_getAds(daySince, dayUntil) {
   SpreadsheetApp.getActiveSpreadsheet().toast("取得処理を開始しました。", sheetName + "取得", 10);
 
   // https://developers.facebook.com/docs/marketing-api/reference/adgroup/insights/
-  var fields = "campaign_id,campaign_name,adset_id,adset_name,ad_id,ad_name,impressions,cpm,inline_link_clicks,inline_link_click_ctr,cpc,actions,spend,date_start,date_stop";
+  var fields = "campaign_id,campaign_name,adset_id,adset_name,ad_id,ad_name,impressions,cpm,inline_link_clicks,inline_link_click_ctr,cost_per_unique_inline_link_click,actions,spend,date_start,date_stop";
 
   // 広告シート作成
   facebook_writeFacebookAdsDataToSheet(sheetName, endpoint, fields, daySince, dayUntil);
@@ -536,7 +536,7 @@ function makeCreativeReport() {
       reportSheet.getRange(rowIndex, 8).setValue(ad.row[headers.indexOf('cpm')]);
       reportSheet.getRange(rowIndex, 9).setValue(ad.row[headers.indexOf('inline_link_clicks')]);
       reportSheet.getRange(rowIndex, 10).setValue(ad.row[headers.indexOf('inline_link_click_ctr')]);
-      reportSheet.getRange(rowIndex, 11).setValue(ad.row[headers.indexOf('cpc')]);
+      reportSheet.getRange(rowIndex, 11).setValue(ad.row[headers.indexOf('cost_per_unique_inline_link_click')]);
       reportSheet.getRange(rowIndex, 12).setValue(ad.conversion);
       reportSheet.getRange(rowIndex, 13).setValue(cvr);
       reportSheet.getRange(rowIndex, 14).setValue(cpa);
@@ -602,12 +602,12 @@ function makeOperationReport() {
 
   // 広告セットの情報を合算
   adSetData.forEach(row => {
-    const [date_start, date_stop, adset_name, impressions, inline_link_clicks, inline_link_click_ctr, cpc, spend, conversions] = row;
+    const [date_start, date_stop, adset_name, impressions, inline_link_clicks, inline_link_click_ctr, cost_per_unique_inline_link_click, spend, conversions] = row;
     if (!adSetMap[adset_name]) {
       adSetMap[adset_name] = {
         impressions: 0,
         inline_link_clicks: 0,
-        cpc: 0,
+        cost_per_unique_inline_link_click: 0,
         spend: 0,
         conversions: 0,
         date_stop: Utilities.formatDate(date_stop, Session.getScriptTimeZone(), 'yyyy-MM-dd')
@@ -615,7 +615,7 @@ function makeOperationReport() {
     }
     adSetMap[adset_name].impressions += parseFloat(impressions) || 0;
     adSetMap[adset_name].inline_link_clicks += parseFloat(inline_link_clicks) || 0;
-    adSetMap[adset_name].cpc += parseFloat(cpc) || 0;
+    adSetMap[adset_name].cost_per_unique_inline_link_click += parseFloat(cost_per_unique_inline_link_click) || 0;
     adSetMap[adset_name].spend += parseFloat(spend) || 0;
     adSetMap[adset_name].conversions += parseFloat(conversions) || 0;
   });
@@ -713,7 +713,7 @@ function makeOperationReport() {
     operationReportSheet.getRange(existingRow, 4).setNumberFormat('#,##0'); // impressions
     operationReportSheet.getRange(existingRow, 5).setNumberFormat('#,##0'); // inline_link_clicks
     operationReportSheet.getRange(existingRow, 6).setNumberFormat('0.00%'); // inline_link_click_ctr
-    operationReportSheet.getRange(existingRow, 7).setNumberFormat('"¥"#,##0'); // cpc
+    operationReportSheet.getRange(existingRow, 7).setNumberFormat('"¥"#,##0'); // cost_per_unique_inline_link_click
     operationReportSheet.getRange(existingRow, 8).setNumberFormat('#,##0'); // conversions
     operationReportSheet.getRange(existingRow, 9).setNumberFormat('0.00%'); // cvr
     operationReportSheet.getRange(existingRow, 10).setNumberFormat('"¥"#,##0'); // cpa
@@ -731,7 +731,7 @@ function makeOperationReport() {
         adSet.impressions,
         adSet.inline_link_clicks,
         adSetCtr,
-        adSet.cpc,
+        adSet.cost_per_unique_inline_link_click,
         adSet.conversions,
         adSet.inline_link_clicks ? adSet.conversions / adSet.inline_link_clicks : 0, // 媒体CVR
         adSet.conversions ? adSet.spend / adSet.conversions : 0, // 媒体CPA
@@ -765,7 +765,7 @@ function makeOperationReport() {
       operationReportSheet.getRange(existingRow, colIndex + 1).setNumberFormat('#,##0'); // impressions
       operationReportSheet.getRange(existingRow, colIndex + 2).setNumberFormat('#,##0'); // inline_link_clicks
       operationReportSheet.getRange(existingRow, colIndex + 3).setNumberFormat('0.00%'); // inline_link_click_ctr
-      operationReportSheet.getRange(existingRow, colIndex + 4).setNumberFormat('"¥"#,##0'); // cpc
+      operationReportSheet.getRange(existingRow, colIndex + 4).setNumberFormat('"¥"#,##0'); // cost_per_unique_inline_link_click
       operationReportSheet.getRange(existingRow, colIndex + 5).setNumberFormat('#,##0'); // conversions
       operationReportSheet.getRange(existingRow, colIndex + 6).setNumberFormat('0.00%'); // cvr
       operationReportSheet.getRange(existingRow, colIndex + 7).setNumberFormat('"¥"#,##0'); // cpa
