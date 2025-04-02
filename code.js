@@ -475,8 +475,15 @@ function makeCreativeReport() {
     });
   }
 
-  var startRow = 3; // 最初のデータ行は3行目から開始
-  var totalAdSets = Object.keys(adSets).length;
+  // adSets を adset_name の昇順にソート
+  var sortedAdSetIds = Object.keys(adSets).sort((a, b) => {
+    var nameA = adSets[a].adSetName.toLowerCase();
+    var nameB = adSets[b].adSetName.toLowerCase();
+    return nameA.localeCompare(nameB);
+  });
+
+  var startRow = 3;
+  var totalAdSets = sortedAdSetIds.length;
   var currentAdSetIndex = 0;
 
   for (var adSetId in adSets) {
