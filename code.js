@@ -629,8 +629,8 @@ function makeOperationReport() {
   totalCpc = totalSpend ? (totalSpend / totalClicks) : 0;
 
   const totalRow = [
-    totalSpend,
     dateStop,
+    totalSpend,
     totalImpressions,
     totalClicks,
     totalCtr,
