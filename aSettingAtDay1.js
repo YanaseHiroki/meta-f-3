@@ -27,7 +27,7 @@ function initializeScriptProperties() {
             'META_API_VERSION_PROMPT': 'MetaアプリのAPIのバージョンを入力してください。',
             
             // DifyのアプリケーションID
-            'DIFY_APP_ID': 'app-6gipSAA9nO3Uy8gBolsqRwGb', // 1~5個の広告を分析するCF (access url)
+            'DIFY_APP_ID': 'app-6gipSAA9nO3Uy8gBolsqRwGb', // 1~5個の広告を分析するCF (Claude)
             'DIFY_APP_ID_PROMPT': 'DifyのアプリケーションIDを入力してください。',
 
             // 広告アカウントID
