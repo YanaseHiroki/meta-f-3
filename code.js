@@ -624,16 +624,17 @@ function makeOperationReport() {
     }
   }
 
-  // 全広告セットのCTRを計算
+  // 全広告セットのCTR・CPCを計算
   totalCtr = totalImpressions ? (totalClicks / totalImpressions) : 0;
+  totalCpc = totalSpend ? (totalSpend / totalClicks) : 0;
 
   const totalRow = [
+    totalSpend,
     dateStop,
     totalImpressions,
     totalClicks,
     totalCtr,
     totalCpc,
-    totalSpend,
     totalConversions,
     totalClicks ? totalConversions / totalClicks : 0, // 媒体CVR
     totalConversions ? totalSpend / totalConversions : 0, // 媒体CPA
@@ -692,11 +693,11 @@ function makeOperationReport() {
   dateCell.setBackground('#d9d9d9');
 
     // 各項目の形式を指定
-    operationReportSheet.getRange(existingRow, 3).setNumberFormat('#,##0'); // impressions
-    operationReportSheet.getRange(existingRow, 4).setNumberFormat('#,##0'); // clicks
-    operationReportSheet.getRange(existingRow, 5).setNumberFormat('0.00%'); // ctr
-    operationReportSheet.getRange(existingRow, 6).setNumberFormat('"¥"#,##0'); // cpc
-    operationReportSheet.getRange(existingRow, 7).setNumberFormat('"¥"#,##0'); // spend
+    operationReportSheet.getRange(existingRow, 3).setNumberFormat('"¥"#,##0'); // spend
+    operationReportSheet.getRange(existingRow, 4).setNumberFormat('#,##0'); // impressions
+    operationReportSheet.getRange(existingRow, 5).setNumberFormat('#,##0'); // clicks
+    operationReportSheet.getRange(existingRow, 6).setNumberFormat('0.00%'); // ctr
+    operationReportSheet.getRange(existingRow, 7).setNumberFormat('"¥"#,##0'); // cpc
     operationReportSheet.getRange(existingRow, 8).setNumberFormat('#,##0'); // conversions
     operationReportSheet.getRange(existingRow, 9).setNumberFormat('0.00%'); // cvr
     operationReportSheet.getRange(existingRow, 10).setNumberFormat('"¥"#,##0'); // cpa
@@ -710,11 +711,11 @@ function makeOperationReport() {
       const adSet = adSetMap[adset_name];
       const adSetCtr = adSet.impressions ? (adSet.clicks / adSet.impressions) : 0; // 各広告セットのCTRを計算
       const adSetRow = [
+        adSet.spend,
         adSet.impressions,
         adSet.clicks,
         adSetCtr,
         adSet.cpc,
-        adSet.spend,
         adSet.conversions,
         adSet.clicks ? adSet.conversions / adSet.clicks : 0, // 媒体CVR
         adSet.conversions ? adSet.spend / adSet.conversions : 0, // 媒体CPA
@@ -744,11 +745,11 @@ function makeOperationReport() {
       operationReportSheet.getRange(existingRow, colIndex, 1, adSetRow.length).setValues([adSetRow]);
 
       // 各項目の形式を指定
-      operationReportSheet.getRange(existingRow, colIndex).setNumberFormat('#,##0'); // impressions
-      operationReportSheet.getRange(existingRow, colIndex + 1).setNumberFormat('#,##0'); // clicks
-      operationReportSheet.getRange(existingRow, colIndex + 2).setNumberFormat('0.00%'); // ctr
-      operationReportSheet.getRange(existingRow, colIndex + 3).setNumberFormat('"¥"#,##0'); // cpc
-      operationReportSheet.getRange(existingRow, colIndex + 4).setNumberFormat('"¥"#,##0'); // spend
+      operationReportSheet.getRange(existingRow, colIndex).setNumberFormat('"¥"#,##0'); // spend
+      operationReportSheet.getRange(existingRow, colIndex + 1).setNumberFormat('#,##0'); // impressions
+      operationReportSheet.getRange(existingRow, colIndex + 2).setNumberFormat('#,##0'); // clicks
+      operationReportSheet.getRange(existingRow, colIndex + 3).setNumberFormat('0.00%'); // ctr
+      operationReportSheet.getRange(existingRow, colIndex + 4).setNumberFormat('"¥"#,##0'); // cpc
       operationReportSheet.getRange(existingRow, colIndex + 5).setNumberFormat('#,##0'); // conversions
       operationReportSheet.getRange(existingRow, colIndex + 6).setNumberFormat('0.00%'); // cvr
       operationReportSheet.getRange(existingRow, colIndex + 7).setNumberFormat('"¥"#,##0'); // cpa
