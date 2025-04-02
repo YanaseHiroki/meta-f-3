@@ -268,6 +268,13 @@ function getAdSetsAndWriteSheet(sheetName, endpoint, fields, daySince, dayUntil)
     return 0;
   }
 
+  // 広告セットデータを `adset_name` の昇順にソート
+  adSetsData.sort((a, b) => {
+    const nameA = a.adset_name ? a.adset_name.toLowerCase() : '';
+    const nameB = b.adset_name ? b.adset_name.toLowerCase() : '';
+    return nameA.localeCompare(nameB);
+  });
+
 // 広告セットデータをスプレッドシートに書き込む
 var sheetName = "広告セット";
 var endpoint = "adsets";
