@@ -39,7 +39,7 @@ function facebook_getAdSets(daySince, dayUntil) {
   console.log(sheetName + "情報 取得開始");
 
   // https://developers.facebook.com/docs/marketing-api/reference/ad-campaign/insights?locale=ja_JP  
-  var fields = "date_start,date_stop,adset_name,impressions,clicks,ctr,cpc,spend,actions";
+  var fields = "date_start,date_stop,adset_name,impressions,inline_link_clicks,ctr,cpc,spend,actions";
 
   // 広告セットを取得
   var adSetsCount = getAdSetsAndWriteSheet(sheetName, endpoint, fields, daySince, dayUntil);
@@ -169,7 +169,7 @@ function getAdsAndWriteSheet(daySince, dayUntil) {
   }
 
   // Meta APIから広告データを取得する
-  const fields = "campaign_id,campaign_name,adset_id,adset_name,ad_id,ad_name,impressions,cpm,clicks,ctr,cpc,actions,spend,date_start,date_stop";
+  const fields = "campaign_id,campaign_name,adset_id,adset_name,ad_id,ad_name,impressions,cpm,inline_link_clicks,ctr,cpc,actions,spend,date_start,date_stop";
   var adsData = getAdsData(fields, daySince, dayUntil);
 
   if (!adsData || adsData.length === 0) {
@@ -354,7 +354,7 @@ function facebook_getAdSetsForYesterday() {
   console.log(sheetName + "情報 取得開始");
 
   // https://developers.facebook.com/docs/marketing-api/reference/ad-campaign/insights?locale=ja_JP
-  var fields = "date_start,date_stop,adset_name,impressions,clicks,ctr,cpc,spend,actions";
+  var fields = "date_start,date_stop,adset_name,impressions,inline_link_clicks,ctr,cpc,spend,actions";
 
   // 昨日の日付を取得
   var daySince = facebook_getDateNDaysAgo(1); // 開始日
@@ -387,7 +387,7 @@ function facebook_getAds(daySince, dayUntil) {
   SpreadsheetApp.getActiveSpreadsheet().toast("取得処理を開始しました。", sheetName + "取得", 10);
 
   // https://developers.facebook.com/docs/marketing-api/reference/adgroup/insights/
-  var fields = "campaign_id,campaign_name,adset_id,adset_name,ad_id,ad_name,impressions,cpm,clicks,ctr,cpc,actions,spend,date_start,date_stop";
+  var fields = "campaign_id,campaign_name,adset_id,adset_name,ad_id,ad_name,impressions,cpm,inline_link_clicks,ctr,cpc,actions,spend,date_start,date_stop";
 
   // 広告シート作成
   facebook_writeFacebookAdsDataToSheet(sheetName, endpoint, fields, daySince, dayUntil);
@@ -526,7 +526,7 @@ function makeCreativeReport() {
 
       // C~P列に対応するデータを設定
       var imageUrl = ad.imageUrl;
-      const cvr = ad.row[headers.indexOf('clicks')] ? ad.conversion / ad.row[headers.indexOf('clicks')] : 0;
+      const cvr = ad.row[headers.indexOf('inline_link_clicks')] ? ad.conversion / ad.row[headers.indexOf('inline_link_clicks')] : 0;
       const cpa = ad.conversion ? ad.spend / ad.conversion : 0;
       reportSheet.getRange(rowIndex, 3).setValue(imageUrl);
       reportSheet.getRange(rowIndex, 4).setFormula(`=IMAGE("${imageUrl}")`);
@@ -534,7 +534,7 @@ function makeCreativeReport() {
       reportSheet.getRange(rowIndex, 6).setValue(ad.spend);
       reportSheet.getRange(rowIndex, 7).setValue(ad.row[headers.indexOf('impressions')]);
       reportSheet.getRange(rowIndex, 8).setValue(ad.row[headers.indexOf('cpm')]);
-      reportSheet.getRange(rowIndex, 9).setValue(ad.row[headers.indexOf('clicks')]);
+      reportSheet.getRange(rowIndex, 9).setValue(ad.row[headers.indexOf('inline_link_clicks')]);
       reportSheet.getRange(rowIndex, 10).setValue(ad.row[headers.indexOf('ctr')]);
       reportSheet.getRange(rowIndex, 11).setValue(ad.row[headers.indexOf('cpc')]);
       reportSheet.getRange(rowIndex, 12).setValue(ad.conversion);
@@ -602,11 +602,11 @@ function makeOperationReport() {
 
   // 広告セットの情報を合算
   adSetData.forEach(row => {
-    const [date_start, date_stop, adset_name, impressions, clicks, ctr, cpc, spend, conversions] = row;
+    const [date_start, date_stop, adset_name, impressions, inline_link_clicks, ctr, cpc, spend, conversions] = row;
     if (!adSetMap[adset_name]) {
       adSetMap[adset_name] = {
         impressions: 0,
-        clicks: 0,
+        inline_link_clicks: 0,
         cpc: 0,
         spend: 0,
         conversions: 0,
@@ -614,7 +614,7 @@ function makeOperationReport() {
       };
     }
     adSetMap[adset_name].impressions += parseFloat(impressions) || 0;
-    adSetMap[adset_name].clicks += parseFloat(clicks) || 0;
+    adSetMap[adset_name].inline_link_clicks += parseFloat(inline_link_clicks) || 0;
     adSetMap[adset_name].cpc += parseFloat(cpc) || 0;
     adSetMap[adset_name].spend += parseFloat(spend) || 0;
     adSetMap[adset_name].conversions += parseFloat(conversions) || 0;
@@ -632,7 +632,7 @@ function makeOperationReport() {
   for (const adset_name in adSetMap) {
     const adSet = adSetMap[adset_name];
     totalImpressions += adSet.impressions;
-    totalClicks += adSet.clicks;
+    totalClicks += adSet.inline_link_clicks;
     totalSpend += adSet.spend;
     totalConversions += adSet.conversions;
     if (!dateStop) {
@@ -711,7 +711,7 @@ function makeOperationReport() {
     // 各項目の形式を指定
     operationReportSheet.getRange(existingRow, 3).setNumberFormat('"¥"#,##0'); // spend
     operationReportSheet.getRange(existingRow, 4).setNumberFormat('#,##0'); // impressions
-    operationReportSheet.getRange(existingRow, 5).setNumberFormat('#,##0'); // clicks
+    operationReportSheet.getRange(existingRow, 5).setNumberFormat('#,##0'); // inline_link_clicks
     operationReportSheet.getRange(existingRow, 6).setNumberFormat('0.00%'); // ctr
     operationReportSheet.getRange(existingRow, 7).setNumberFormat('"¥"#,##0'); // cpc
     operationReportSheet.getRange(existingRow, 8).setNumberFormat('#,##0'); // conversions
@@ -725,15 +725,15 @@ function makeOperationReport() {
     let colIndex = 14;
     for (const adset_name in adSetMap) {
       const adSet = adSetMap[adset_name];
-      const adSetCtr = adSet.impressions ? (adSet.clicks / adSet.impressions) : 0; // 各広告セットのCTRを計算
+      const adSetCtr = adSet.impressions ? (adSet.inline_link_clicks / adSet.impressions) : 0; // 各広告セットのCTRを計算
       const adSetRow = [
         adSet.spend,
         adSet.impressions,
-        adSet.clicks,
+        adSet.inline_link_clicks,
         adSetCtr,
         adSet.cpc,
         adSet.conversions,
-        adSet.clicks ? adSet.conversions / adSet.clicks : 0, // 媒体CVR
+        adSet.inline_link_clicks ? adSet.conversions / adSet.inline_link_clicks : 0, // 媒体CVR
         adSet.conversions ? adSet.spend / adSet.conversions : 0, // 媒体CPA
         0, // 実CV
         0, // 実CVR
@@ -763,7 +763,7 @@ function makeOperationReport() {
       // 各項目の形式を指定
       operationReportSheet.getRange(existingRow, colIndex).setNumberFormat('"¥"#,##0'); // spend
       operationReportSheet.getRange(existingRow, colIndex + 1).setNumberFormat('#,##0'); // impressions
-      operationReportSheet.getRange(existingRow, colIndex + 2).setNumberFormat('#,##0'); // clicks
+      operationReportSheet.getRange(existingRow, colIndex + 2).setNumberFormat('#,##0'); // inline_link_clicks
       operationReportSheet.getRange(existingRow, colIndex + 3).setNumberFormat('0.00%'); // ctr
       operationReportSheet.getRange(existingRow, colIndex + 4).setNumberFormat('"¥"#,##0'); // cpc
       operationReportSheet.getRange(existingRow, colIndex + 5).setNumberFormat('#,##0'); // conversions
