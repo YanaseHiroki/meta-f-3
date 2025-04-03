@@ -11,7 +11,7 @@ SpreadsheetApp.getUi().showModalDialog(userInterface, "Apps Script");
 function onOpenProcess() {
     showSidebar();                  // サイドバーを表示
     addOriginalMenu();              // カスタムメニューを表示
-    showScriptDialog();             // Apps Scriptのリンクを表示【開発用】
+    // showScriptDialog();             // Apps Scriptのリンクを表示【開発用】
     checkScriptProperties();        // スクリプトプロパティのチェック
 }
 
@@ -20,7 +20,7 @@ function showSidebar() {
     Logger.log('showSidebar() start');
 
     var html = HtmlService.createHtmlOutputFromFile('sidebar')
-        .setTitle('データ取得・レポート作成');
+        .setTitle('サイドバー');
 
     SpreadsheetApp.getUi().showSidebar(html);
 
