@@ -1041,18 +1041,43 @@ function writeDataToSheet(sheetName, data, fields, endpoint, daySince, dayUntil)
 
     // 各フィールドに対応する値をキーとともに格納
     var keys = Object.keys(adData);
+
+    // adDataオブジェクトの各キーについて処理
     for (var j = 0; j < keys.length; j++) {
       var key = keys[j];
 
-      // adDataオブジェクトの各キーについて処理
-      if (Array.isArray(adData[key]) && key === 'actions') { // 広告のconversions
-        var purchase = adData[key].find(action => action.action_type === 'offsite_conversion.fb_pixel_purchase');
-        rowData['conversions'] = purchase ? purchase.value : '';
+      // 広告のconversionsが含まれているかもしれないフィールド
+      if (key === 'actions') {
 
-      } else if (key === 'actions' && adData[key].action_type === 'web_in_store_purchase') { // 広告セットのconversions
-        var purchase = adData[key].value;
-        rowData['conversions'] = purchase ? purchase.value : '';
+        // actionsが配列の場合
+        if (Array.isArray(adData[key])) {
 
+          const conversioinTypes = [          // コンバージョンに相当するaction_typeのリスト
+            'complete_registration',
+            'web_in_store_purchase',
+            'web_in_store_purchase.fb_pixel_purchase',
+            'offsite_conversion.fb_pixel_purchase'
+          ];
+
+          // actionsの配列をループして、action_typeがweb_in_store_purchaseのものを探す
+          var actions = adData[key];
+          for (var action of actions) {
+            if (conversioinTypes.includes(action.action_type)) {
+              rowData['conversions'] = action.value;
+              break;
+            }
+          }
+
+        // actionsが配列でなくて、actions.action_typeの構造の場合
+        } else if (adData[key] && adData[key].action_type) {
+          if (conversioinTypes.includes(adData[key].action_type)) {
+
+            // action_typeがconversionsに相当する場合
+            if (conversioinTypes.includes(actions.action_type)) {
+              rowData['conversions'] = actions.value;
+            }
+          }
+        }
       } else if (key === 'ad_id' && adData[key]) {
         rowData[key] = adData[key];
         if (endpoint === 'ads') {
