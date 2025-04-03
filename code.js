@@ -184,12 +184,13 @@ function getAdsAndWriteSheet(daySince, dayUntil) {
 
   if (writtenDataCount) {
     console.log("取得した広告データをスプレッドシートに書き込みました。");
-    SpreadsheetApp.getUi().alert(`${writtenDataCount}件の広告データを取得しました。内容をご確認ください。`);
 
   } else {
     console.log("取得した広告データの書き込みに失敗しました。");
     SpreadsheetApp.getUi().alert("広告データの書き込みに失敗しました。しばらくしてから再度お試しください。");
   }
+
+  makeCreativeReport(); // クリエイティブレポートを作成
 
   return writtenDataCount;
 }
