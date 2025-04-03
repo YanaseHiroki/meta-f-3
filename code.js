@@ -1059,7 +1059,7 @@ function writeDataToSheet(sheetName, data, fields, endpoint, daySince, dayUntil)
             'offsite_conversion.fb_pixel_purchase'
           ];
 
-          // actionsの配列をループして、action_typeがweb_in_store_purchaseのものを探す
+          // actionsの配列をループして、action_typeがコンバージョンに相当するものを探す
           var actions = adData[key];
           for (var action of actions) {
             if (conversioinTypes.includes(action.action_type)) {
