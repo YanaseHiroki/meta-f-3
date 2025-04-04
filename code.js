@@ -38,7 +38,7 @@ function facebook_getAdSets(daySince, dayUntil) {
 
   console.log(sheetName + "情報 取得開始");
 
-  // https://developers.facebook.com/docs/marketing-api/reference/ad-campaign/insights?locale=ja_JP  
+  // https://developers.facebook.com/docs/marketing-api/reference/ad-campaign/insights?locale=ja_JP
   var fields = "date_start,date_stop,adset_name,impressions,inline_link_clicks,inline_link_click_ctr,cost_per_unique_inline_link_click,spend,actions";
 
   // 広告セットを取得
@@ -424,8 +424,12 @@ function makeCreativeReport() {
   // A列の幅を35に設定
   reportSheet.setColumnWidth(1, 35);
 
-  // 「CRTレポート」シートのB1に「※ＣＶ数で降順ソート」という値を入れる
-  reportSheet.getRange('B1').setValue('※ＣＶ数で降順ソート');
+  // 「CRTレポート」シートのB1に「マージン率」という値を入れる
+  reportSheet.getRange('B1').setValue('マージン率');
+  reportSheet.getRange('B1').setFontWeight('bold').setHorizontalAlignment('center');
+
+  // B2の背景色を黄色に設定
+  reportSheet.getRange('B2').setBackground('yellow');
 
   // 「【テンプレート】CRTレポート」シートがあれば取得して後続で使用する
   var template = spreadsheet.getSheetByName('【テンプレート】CRTレポート');
@@ -531,8 +535,8 @@ function makeCreativeReport() {
       const cpa = ad.conversion ? ad.spend / ad.conversion : 0;
       reportSheet.getRange(rowIndex, 3).setValue(imageUrl);
       reportSheet.getRange(rowIndex, 4).setFormula(`=IMAGE("${imageUrl}")`);
-      reportSheet.getRange(rowIndex, 5).setValue(ad.spend / 0.7);
-      reportSheet.getRange(rowIndex, 6).setValue(ad.spend);
+      reportSheet.getRange(rowIndex, 5).setValue(`=IF(B2="","",F${rowIndex}*B2)`);               //  Cost Gross
+      reportSheet.getRange(rowIndex, 6).setValue(ad.spend);                                      //  Cost Net
       reportSheet.getRange(rowIndex, 7).setValue(ad.row[headers.indexOf('impressions')]);
       reportSheet.getRange(rowIndex, 8).setValue(ad.row[headers.indexOf('cpm')]);
       reportSheet.getRange(rowIndex, 9).setValue(ad.row[headers.indexOf('inline_link_clicks')]);
