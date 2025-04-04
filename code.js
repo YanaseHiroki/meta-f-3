@@ -1066,17 +1066,16 @@ function writeDataToSheet(sheetName, data, fields, endpoint, daySince, dayUntil)
         // actionsが配列の場合
         if (Array.isArray(adData[key])) {
 
-          const conversioinTypes = [          // コンバージョンに相当するaction_typeのリスト
-            'complete_registration'
-          ];
-            // 'web_in_store_purchase',
-            // 'web_in_store_purchase.fb_pixel_purchase',
-            // 'offsite_conversion.fb_pixel_purchase'
+          const conversioinType = PropertiesService.getScriptProperties().getProperty("META_CONVERSION_TYPE") ?? "web_in_store_purchase";
+            // 'complete_registration' // WLB
+            // 'web_in_store_purchase', // デフォルト
+            // 'web_in_store_purchase.fb_pixel_purchase', // これも？
+            // 'offsite_conversion.fb_pixel_purchase' // これも？
 
           // actionsの配列をループして、action_typeがコンバージョンに相当するものを探す
           var actions = adData[key];
           for (var action of actions) {
-            if (conversioinTypes.includes(action.action_type)) {
+            if (conversioinType === action.action_type) {
               rowData['conversions'] = action.value;
               break;
             }
@@ -1084,10 +1083,10 @@ function writeDataToSheet(sheetName, data, fields, endpoint, daySince, dayUntil)
 
         // actionsが配列でなくて、actions.action_typeの構造の場合
         } else if (adData[key] && adData[key].action_type) {
-          if (conversioinTypes.includes(adData[key].action_type)) {
+          if (conversioinType === adData[key].action_type) {
 
             // action_typeがconversionsに相当する場合
-            if (conversioinTypes.includes(actions.action_type)) {
+            if (conversioinType === actions.action_type) {
               rowData['conversions'] = actions.value;
             }
           }

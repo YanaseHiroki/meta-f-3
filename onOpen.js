@@ -35,8 +35,10 @@ function addOriginalMenu() {
 
     ui.createMenu('スクリプト実行')
         .addItem('サイドメニュー表示', 'showSidebar')
-        .addItem('CRTレポート再作成', 'makeCreativeReport')
         .addSeparator()
+        .addItem('CVタイプ変更', 'updateMetaConversionType')
+        .addSeparator()
+        .addItem('CRTレポート再作成', 'makeCreativeReport')
         .addItem('APIトークン更新', 'refreshAccessToken')
         .addToUi();
 
@@ -51,7 +53,7 @@ function addOriginalMenu() {
 function checkScriptProperties() {
 
     // 必要なスクリプトプロパティのキーの配列
-    var requiredKeys = 
+    var requiredKeys =
         [
             'META_API_VERSION',
             'DIFY_APP_ID',
@@ -86,4 +88,33 @@ function checkScriptProperties() {
     } else {
         Logger.log('Some required script properties are missing.');
     }
+}
+
+// ユーザに入力を促して受け取った値でプロパティの値を更新する関数
+function promptPropertyInput(promptKey) {
+    const scriptProperties = PropertiesService.getScriptProperties();
+
+    // 現在の値を取得（キーが見つからなければ空文字を設定）
+    let currentValue = scriptProperties.getProperty(promptKey) || "";
+    
+    // プロンプトメッセージを作成
+    const promptMessage = `${promptKey} の現在の値は "${currentValue}" です。新しい値を入力してください。`;
+
+    // 入力フォームを表示
+    const userInput = Browser.inputBox(promptMessage, Browser.Buttons.OK_CANCEL);
+
+    // ユーザーがキャンセルを押した場合
+    if (userInput === "cancel" || userInput === "") {
+        Logger.log(`プロパティ ${promptKey} の変更はキャンセルされました。`);
+        return;
+    }
+
+    // プロパティを更新
+    scriptProperties.setProperty(promptKey, userInput);
+    Logger.log(`プロパティ ${promptKey} が更新されました: "${userInput}"`);
+}
+
+// CVタイプ変更のためのプロンプトを表示する関数
+function updateMetaConversionType() {
+    promptPropertyInput("META_CONVERSION_TYPE");
 }

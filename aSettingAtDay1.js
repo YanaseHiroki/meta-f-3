@@ -41,6 +41,9 @@ function initializeScriptProperties() {
 
             // Metaアプリのアクセストークン
             'META_ACCESS_TOKEN_PROMPT': 'Metaアプリのアクセストークンを入力してください(ads_read権限が必要です)。',
+
+            // コンバージョンのタイプ
+            'META_CONVERSION_TYPE_PROMPT': '広告のコンバージョンのタイプを入力してください。',
         });
 }
 
