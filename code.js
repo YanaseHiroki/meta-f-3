@@ -595,7 +595,7 @@ function makeOperationReport() {
 
   // 表のタイトル（商材名）の行番号
   const tableTopRow = 10;
-  const adSetWidth = 11; // 広告セット1つ分の列数
+  const adSetWidth = 12; // 広告セット1つ分の列数
 
   // シート情報の読み込み
   const lastRow = adSetSheet.getLastRow();
@@ -651,7 +651,8 @@ function makeOperationReport() {
 
   const totalRow = [
     dateStop,
-    totalSpend,
+    totalSpend, // Cost Gross(後で関数を入れる)
+    totalSpend, // Cost Net
     totalImpressions,
     totalClicks,
     totalCtr,
@@ -700,38 +701,44 @@ function makeOperationReport() {
   if (adSetData.length === 0) {
     // 広告セットシートのデータが0行の場合、最終行の次に1列挿入してB列に日付を記入
     if (noDataDate) {
-    const dateCell = operationReportSheet.getRange(existingRow, 2);
-    dateCell.setValue(noDataDate);
-    dateCell.setBackground('#d9d9d9'); // 背景色を#d9d9d9に設定
-      dateStop = noDataDate; // dateStopにA3の値を代入
+      const dateCell = operationReportSheet.getRange(existingRow, 2);
+      dateCell.setValue(noDataDate);
+      dateCell.setBackground('#d9d9d9'); // 背景色を#d9d9d9に設定
+      dateStop = noDataDate; // dateStopに日付を代入
     }
   } else {
-    // 全広告セットの合計値をC列からM列に入れる
+    // 全広告セットの合計値をC列からN列に入れる
     operationReportSheet.getRange(existingRow, 2, 1, totalRow.length).setValues([totalRow]);
 
-  // B列の日付セルの背景色を#d9d9d9に設定
-  const dateCell = operationReportSheet.getRange(existingRow, 2);
-  dateCell.setBackground('#d9d9d9');
+    // Cost Gross のセルに関数を設定
+    const costGrossCell = operationReportSheet.getRange(existingRow, 3);
+    costGrossCell.setFormula(`=IF($B$2="", "", D${existingRow}*$B$2)`);
+
+    // B列の日付セルの背景色を#d9d9d9に設定
+    const dateCell = operationReportSheet.getRange(existingRow, 2);
+    dateCell.setBackground('#d9d9d9');
 
     // 各項目の形式を指定
-    operationReportSheet.getRange(existingRow, 3).setNumberFormat('"¥"#,##0'); // spend
-    operationReportSheet.getRange(existingRow, 4).setNumberFormat('#,##0'); // impressions
-    operationReportSheet.getRange(existingRow, 5).setNumberFormat('#,##0'); // inline_link_clicks
-    operationReportSheet.getRange(existingRow, 6).setNumberFormat('0.00%'); // inline_link_click_ctr
-    operationReportSheet.getRange(existingRow, 7).setNumberFormat('"¥"#,##0'); // cost_per_unique_inline_link_click
-    operationReportSheet.getRange(existingRow, 8).setNumberFormat('#,##0'); // conversions
-    operationReportSheet.getRange(existingRow, 9).setNumberFormat('0.00%'); // cvr
-    operationReportSheet.getRange(existingRow, 10).setNumberFormat('"¥"#,##0'); // cpa
-    operationReportSheet.getRange(existingRow, 11).setNumberFormat('#,##0'); // 実CV
-    operationReportSheet.getRange(existingRow, 12).setNumberFormat('0.00%'); // 実CVR
-    operationReportSheet.getRange(existingRow, 13).setNumberFormat('"¥"#,##0'); // 実CPA
+    operationReportSheet.getRange(existingRow, 3).setNumberFormat('"¥"#,##0'); // Cost Gross
+    operationReportSheet.getRange(existingRow, 4).setNumberFormat('"¥"#,##0'); // Cost Net
+    operationReportSheet.getRange(existingRow, 5).setNumberFormat('#,##0'); // impressions
+    operationReportSheet.getRange(existingRow, 6).setNumberFormat('#,##0'); // inline_link_clicks
+    operationReportSheet.getRange(existingRow, 7).setNumberFormat('0.00%'); // inline_link_click_ctr
+    operationReportSheet.getRange(existingRow, 8).setNumberFormat('"¥"#,##0'); // cost_per_unique_inline_link_click
+    operationReportSheet.getRange(existingRow, 9).setNumberFormat('#,##0'); // conversions
+    operationReportSheet.getRange(existingRow, 10).setNumberFormat('0.00%'); // cvr
+    operationReportSheet.getRange(existingRow, 11).setNumberFormat('"¥"#,##0'); // cpa
+    operationReportSheet.getRange(existingRow, 12).setNumberFormat('#,##0'); // 実CV
+    operationReportSheet.getRange(existingRow, 13).setNumberFormat('0.00%'); // 実CVR
+    operationReportSheet.getRange(existingRow, 14).setNumberFormat('"¥"#,##0'); // 実CPA
 
     // 広告セットごとの情報を追加
-    let colIndex = 14;
+    let colIndex = 15; // O列から開始
     for (const adset_name in adSetMap) {
       const adSet = adSetMap[adset_name];
       const adSetCtr = adSet.impressions ? (adSet.inline_link_clicks / adSet.impressions) : 0; // 各広告セットのCTRを計算
       const adSetRow = [
+        `=IF($B$2="", "", ${getColumnLetter(colIndex + 1)}${existingRow}*$B$2)`,
         adSet.spend,
         adSet.impressions,
         adSet.inline_link_clicks,
@@ -746,7 +753,7 @@ function makeOperationReport() {
       ];
 
       // 媒体CV、媒体CVR、媒体CPAに#NUM!が入る場合は0にする
-      for (let i = 6; i <= 8; i++) {
+      for (let i = 7; i <= 9; i++) {
         if (isNaN(adSetRow[i]) || !isFinite(adSetRow[i])) {
           adSetRow[i] = 0;
         }
@@ -758,8 +765,8 @@ function makeOperationReport() {
       adSetNameRange.setBackground('#ADD8E6'); // 水色背景
       adSetNameRange.merge();
 
-      // C12:M12をN12:X12, Y12:AI12, AJ12:AT12などにコピー
-      const headerRange = operationReportSheet.getRange(tableTopRow + 2, 3, 1, 11);
+      // タイトル行にあたるC12:M12を各広告セットのためにN12:X12, Y12:AI12, AJ12:AT12などにコピー
+      const headerRange = operationReportSheet.getRange(tableTopRow + 2, 3, 1, adSetWidth);
       headerRange.copyTo(operationReportSheet.getRange(tableTopRow + 2, colIndex, 1, adSetWidth));
 
       // 広告セットの値をN13:X13, Y13:AI13, AJ13:AT13などに設定
@@ -767,19 +774,20 @@ function makeOperationReport() {
 
       // 各項目の形式を指定
       operationReportSheet.getRange(existingRow, colIndex).setNumberFormat('"¥"#,##0'); // spend
-      operationReportSheet.getRange(existingRow, colIndex + 1).setNumberFormat('#,##0'); // impressions
-      operationReportSheet.getRange(existingRow, colIndex + 2).setNumberFormat('#,##0'); // inline_link_clicks
-      operationReportSheet.getRange(existingRow, colIndex + 3).setNumberFormat('0.00%'); // inline_link_click_ctr
-      operationReportSheet.getRange(existingRow, colIndex + 4).setNumberFormat('"¥"#,##0'); // cost_per_unique_inline_link_click
-      operationReportSheet.getRange(existingRow, colIndex + 5).setNumberFormat('#,##0'); // conversions
-      operationReportSheet.getRange(existingRow, colIndex + 6).setNumberFormat('0.00%'); // cvr
-      operationReportSheet.getRange(existingRow, colIndex + 7).setNumberFormat('"¥"#,##0'); // cpa
-      operationReportSheet.getRange(existingRow, colIndex + 8).setNumberFormat('#,##0'); // 実CV
-      operationReportSheet.getRange(existingRow, colIndex + 9).setNumberFormat('0.00%'); // 実CVR
-      operationReportSheet.getRange(existingRow, colIndex + 10).setNumberFormat('"¥"#,##0'); // 実CPA
+      operationReportSheet.getRange(existingRow, colIndex + 1).setNumberFormat('"¥"#,##0'); // spend
+      operationReportSheet.getRange(existingRow, colIndex + 2).setNumberFormat('#,##0'); // impressions
+      operationReportSheet.getRange(existingRow, colIndex + 3).setNumberFormat('#,##0'); // inline_link_clicks
+      operationReportSheet.getRange(existingRow, colIndex + 4).setNumberFormat('0.00%'); // inline_link_click_ctr
+      operationReportSheet.getRange(existingRow, colIndex + 5).setNumberFormat('"¥"#,##0'); // cost_per_unique_inline_link_click
+      operationReportSheet.getRange(existingRow, colIndex + 6).setNumberFormat('#,##0'); // conversions
+      operationReportSheet.getRange(existingRow, colIndex + 7).setNumberFormat('0.00%'); // cvr
+      operationReportSheet.getRange(existingRow, colIndex + 8).setNumberFormat('"¥"#,##0'); // cpa
+      operationReportSheet.getRange(existingRow, colIndex + 9).setNumberFormat('#,##0'); // 実CV
+      operationReportSheet.getRange(existingRow, colIndex + 10).setNumberFormat('0.00%'); // 実CVR
+      operationReportSheet.getRange(existingRow, colIndex + 11).setNumberFormat('"¥"#,##0'); // 実CPA
 
       // 罫線を引く
-      const rangeToBorder = operationReportSheet.getRange(tableTopRow + 1, 2, existingRow - tableTopRow, colIndex + 9);
+      const rangeToBorder = operationReportSheet.getRange(tableTopRow + 1, 2, existingRow - tableTopRow, colIndex + adSetWidth - 2);
       rangeToBorder.setBorder(true, true, true, true, true, true);
 
       // 背景色を設定
@@ -788,20 +796,21 @@ function makeOperationReport() {
       operationReportSheet.getRange(existingRow, colIndex + 7, 1, 1).setBackground('#fce4d6'); // 媒体CPAをオレンジ
       operationReportSheet.getRange(existingRow, colIndex + 10, 1, 1).setBackground('#fce4d6'); // 実CPAをオレンジ
 
-      colIndex += 11; // 広告セット同士の間に不要な空の列がないようにする
+      colIndex += adSetWidth; // 広告セット同士の間に不要な空の列がないようにする
     }
   }
 
   // データをB列の値の昇順にソート
+  const startSortRow =  tableTopRow + 3; // 今回書き込まれた行の開始位置
+
   const rangeToSort = operationReportSheet.getRange(
-    tableTopRow + 3, 2,
-    operationReportSheet.getLastRow() - tableTopRow - 2, operationReportSheet.getLastColumn() - 1);
-  const sortedData = rangeToSort.getValues().sort((a, b) => {
-    const dateA = new Date(a[0]);
-    const dateB = new Date(b[0]);
-    return dateA - dateB;
-  });
-  rangeToSort.setValues(sortedData);
+    startSortRow, 2, // ソート開始行とB列
+    existingRow - tableTopRow - 2, // ソートする行数
+    operationReportSheet.getLastColumn() - 1 // ソートする列数（B列以降）
+  );
+
+  // ソート範囲を指定して行を移動
+  rangeToSort.sort({ column: 2, ascending: true }); // B列（2列目）を昇順でソート
 
   // シートを表示
   operationReportSheet.activate();
@@ -1058,11 +1067,11 @@ function writeDataToSheet(sheetName, data, fields, endpoint, daySince, dayUntil)
         if (Array.isArray(adData[key])) {
 
           const conversioinTypes = [          // コンバージョンに相当するaction_typeのリスト
-            'complete_registration',
-            'web_in_store_purchase',
-            'web_in_store_purchase.fb_pixel_purchase',
-            'offsite_conversion.fb_pixel_purchase'
+            'complete_registration'
           ];
+            // 'web_in_store_purchase',
+            // 'web_in_store_purchase.fb_pixel_purchase',
+            // 'offsite_conversion.fb_pixel_purchase'
 
           // actionsの配列をループして、action_typeがコンバージョンに相当するものを探す
           var actions = adData[key];
@@ -1194,4 +1203,15 @@ function getAdImageUrl(adId) {
 
   console.log(`getAdImageUrl 終了（返却値: null`);
   return null;
+}
+
+// 列番号をアルファベットに変換する関数
+function getColumnLetter(columnNumber) {
+  let columnLetter = '';
+  while (columnNumber > 0) {
+    const remainder = (columnNumber - 1) % 26;
+    columnLetter = String.fromCharCode(65 + remainder) + columnLetter;
+    columnNumber = Math.floor((columnNumber - 1) / 26);
+  }
+  return columnLetter;
 }
