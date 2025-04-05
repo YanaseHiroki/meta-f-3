@@ -98,7 +98,7 @@ function promptPropertyInput(promptKey) {
     let currentValue = scriptProperties.getProperty(promptKey) || "";
     
     // プロンプトメッセージを作成
-    const promptMessage = `${promptKey} の現在の値は "${currentValue}" です。新しい値を入力してください。`;
+    const promptMessage = `${promptKey} の現在の値: "${currentValue}"\n新しい値を入力してください:`;
 
     // 入力フォームを表示
     const userInput = Browser.inputBox(promptMessage, Browser.Buttons.OK_CANCEL);
