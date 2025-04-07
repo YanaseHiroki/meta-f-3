@@ -531,22 +531,25 @@ function makeCreativeReport() {
 
       // C~P列に対応するデータを設定
       var imageUrl = ad.imageUrl;
+      const cpm = `=IF($B$2="",${cpa},${ad.row[headers.indexOf('cpm')]}*$B$2)`;
+      const cpc = `=IF($B$2="",${ad.row[headers.indexOf('cost_per_unique_inline_link_click')]},${ad.row[headers.indexOf('cost_per_unique_inline_link_click')]}*$B$2)`;
       const cvr = ad.row[headers.indexOf('inline_link_clicks')] ? ad.conversion / ad.row[headers.indexOf('inline_link_clicks')] : 0;
       const cpa = ad.conversion ? ad.spend / ad.conversion : 0;
+      cpa = `=IF($B$2="",${cpa},${cpa}*$B$2)`;
       reportSheet.getRange(rowIndex, 3).setValue(imageUrl);
       reportSheet.getRange(rowIndex, 4).setFormula(`=IMAGE("${imageUrl}")`);
-      reportSheet.getRange(rowIndex, 5).setValue(`=IF(B2="","",F${rowIndex}*B2)`);               //  Cost Gross
-      reportSheet.getRange(rowIndex, 6).setValue(ad.spend);                                      //  Cost Net
-      reportSheet.getRange(rowIndex, 7).setValue(ad.row[headers.indexOf('impressions')]);
-      reportSheet.getRange(rowIndex, 8).setValue(ad.row[headers.indexOf('cpm')]);
-      reportSheet.getRange(rowIndex, 9).setValue(ad.row[headers.indexOf('inline_link_clicks')]);
-      reportSheet.getRange(rowIndex, 10).setValue(ad.row[headers.indexOf('inline_link_click_ctr')]);
-      reportSheet.getRange(rowIndex, 11).setValue(ad.row[headers.indexOf('cost_per_unique_inline_link_click')]);
-      reportSheet.getRange(rowIndex, 12).setValue(ad.conversion);
-      reportSheet.getRange(rowIndex, 13).setValue(cvr);
-      reportSheet.getRange(rowIndex, 14).setValue(cpa);
-      reportSheet.getRange(rowIndex, 15).setValue(ad.row[headers.indexOf('date_start')]);
-      reportSheet.getRange(rowIndex, 16).setValue(ad.row[headers.indexOf('date_stop')]);
+      reportSheet.getRange(rowIndex, 5).setValue(`=IF($B$2="","",F${rowIndex}*$B$2)`);                            //  Cost Gross
+      reportSheet.getRange(rowIndex, 6).setValue(ad.spend);                                                       //  Cost Net
+      reportSheet.getRange(rowIndex, 7).setValue(ad.row[headers.indexOf('impressions')]);                         //  Impressions
+      reportSheet.getRange(rowIndex, 8).setValue(cpm);                                                            //  CPM TODO:関数 ok
+      reportSheet.getRange(rowIndex, 9).setValue(ad.row[headers.indexOf('inline_link_clicks')]);                  //  Clicks
+      reportSheet.getRange(rowIndex, 10).setValue(ad.row[headers.indexOf('inline_link_click_ctr')]);              //  CTR
+      reportSheet.getRange(rowIndex, 11).setValue(cpc);                                                           //  CPC TODO:関数 ok
+      reportSheet.getRange(rowIndex, 12).setValue(ad.conversion);                                                 //  Conversions
+      reportSheet.getRange(rowIndex, 13).setValue(cvr);                                                           //  CVR
+      reportSheet.getRange(rowIndex, 14).setValue(cpa);                                                           //  CPA TODO:関数
+      reportSheet.getRange(rowIndex, 15).setValue(ad.row[headers.indexOf('date_start')]);                         //  Date Start
+      reportSheet.getRange(rowIndex, 16).setValue(ad.row[headers.indexOf('date_stop')]);                          //  Date Stop
     }
 
     // // 広告情報の範囲を取得してdifyChatflowApiFilesAccessを呼び出す                               ◆◆◆◆◆【Difyによる分析を無効化】
