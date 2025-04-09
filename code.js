@@ -531,23 +531,24 @@ function makeCreativeReport() {
 
       // C~P列に対応するデータを設定
       var imageUrl = ad.imageUrl;
-      const cpm = `=IF($B$2="",${cpa},${ad.row[headers.indexOf('cpm')]}*$B$2)`;
-      const cpc = `=IF($B$2="",${ad.row[headers.indexOf('cost_per_unique_inline_link_click')]},${ad.row[headers.indexOf('cost_per_unique_inline_link_click')]}*$B$2)`;
-      const cvr = ad.row[headers.indexOf('inline_link_clicks')] ? ad.conversion / ad.row[headers.indexOf('inline_link_clicks')] : 0;
-      const cpa = ad.conversion ? ad.spend / ad.conversion : 0;
-      cpa = `=IF($B$2="",${cpa},${cpa}*$B$2)`;
-      reportSheet.getRange(rowIndex, 3).setValue(imageUrl);
-      reportSheet.getRange(rowIndex, 4).setFormula(`=IMAGE("${imageUrl}")`);
-      reportSheet.getRange(rowIndex, 5).setValue(`=IF($B$2="","",F${rowIndex}*$B$2)`);                            //  Cost Gross
+      const cpm = multiplyMarginRate(ad.row[headers.indexOf('cpm')]);
+      const cpc = multiplyMarginRate(ad.row[headers.indexOf('cost_per_unique_inline_link_click')]);
+      const cvr = ad.row[headers.indexOf('inline_link_clicks')] ?
+          ad.conversion / ad.row[headers.indexOf('inline_link_clicks')] : 0;
+      const cpa = ad.conversion ? multiplyMarginRate(ad.spend / ad.conversion) : 0;
+
+      reportSheet.getRange(rowIndex, 3).setValue(imageUrl); // 画像URL
+      reportSheet.getRange(rowIndex, 4).setFormula(`=IMAGE("${imageUrl}")`); // 画像
+      reportSheet.getRange(rowIndex, 5).setValue(`=IF(ISNUMBER($B$2),F${rowIndex}*$B$2,"")`);                            //  Cost Gross
       reportSheet.getRange(rowIndex, 6).setValue(ad.spend);                                                       //  Cost Net
       reportSheet.getRange(rowIndex, 7).setValue(ad.row[headers.indexOf('impressions')]);                         //  Impressions
-      reportSheet.getRange(rowIndex, 8).setValue(cpm);                                                            //  CPM TODO:関数 ok
+      reportSheet.getRange(rowIndex, 8).setValue(cpm);                                                            //  CPM
       reportSheet.getRange(rowIndex, 9).setValue(ad.row[headers.indexOf('inline_link_clicks')]);                  //  Clicks
       reportSheet.getRange(rowIndex, 10).setValue(ad.row[headers.indexOf('inline_link_click_ctr')]);              //  CTR
-      reportSheet.getRange(rowIndex, 11).setValue(cpc);                                                           //  CPC TODO:関数 ok
+      reportSheet.getRange(rowIndex, 11).setValue(cpc);                                                           //  CPC
       reportSheet.getRange(rowIndex, 12).setValue(ad.conversion);                                                 //  Conversions
       reportSheet.getRange(rowIndex, 13).setValue(cvr);                                                           //  CVR
-      reportSheet.getRange(rowIndex, 14).setValue(cpa);                                                           //  CPA TODO:関数
+      reportSheet.getRange(rowIndex, 14).setValue(cpa);                                                           //  CPA
       reportSheet.getRange(rowIndex, 15).setValue(ad.row[headers.indexOf('date_start')]);                         //  Date Start
       reportSheet.getRange(rowIndex, 16).setValue(ad.row[headers.indexOf('date_stop')]);                          //  Date Stop
     }
@@ -555,12 +556,12 @@ function makeCreativeReport() {
     // // 広告情報の範囲を取得してdifyChatflowApiFilesAccessを呼び出す                               ◆◆◆◆◆【Difyによる分析を無効化】
     // var adDataRange = reportSheet.getRange(startRow + 2, 2, topAds.length, 15).getValues();
     // var answerJson = difyChatflowApiFilesAccess(adDataRange, adSetId, adSet.adSetName);
-    
+
     // // answerJsonの内容をシートに書き込む
     // if(answerJson) {
     //   reportSheet.getRange(startRow + 8, 3).setValue(answerJson.current_status);
     //   reportSheet.getRange(startRow + 9, 3).setValue(answerJson.future_implications);
-    // } 
+    // }
 
     startRow += 11; // 次の広告セットのために11行下に移動
   }
@@ -659,10 +660,10 @@ function makeOperationReport() {
     totalImpressions,
     totalClicks,
     totalCtr,
-    totalCpc,
+    multiplyMarginRate(totalCpc),
     totalConversions,
     totalClicks ? totalConversions / totalClicks : 0, // 媒体CVR
-    totalConversions ? totalSpend / totalConversions : 0, // 媒体CPA
+    totalConversions ? multiplyMarginRate(totalSpend / totalConversions) : 0, // 媒体CPA
     0, // 実CV
     0, // 実CVR
     0  // 実CPA
@@ -714,8 +715,7 @@ function makeOperationReport() {
     operationReportSheet.getRange(existingRow, 2, 1, totalRow.length).setValues([totalRow]);
 
     // Cost Gross のセルに関数を設定
-    const costGrossCell = operationReportSheet.getRange(existingRow, 3);
-    costGrossCell.setFormula(`=IF($B$2="", "", D${existingRow}*$B$2)`);
+    operationReportSheet.getRange(existingRow, 3).setFormula(`=IF(ISNUMBER($B$2), D${existingRow}*$B$2, "")`);
 
     // B列の日付セルの背景色を#d9d9d9に設定
     const dateCell = operationReportSheet.getRange(existingRow, 2);
@@ -739,17 +739,17 @@ function makeOperationReport() {
     let colIndex = 15; // O列から開始
     for (const adset_name in adSetMap) {
       const adSet = adSetMap[adset_name];
-      const adSetCtr = adSet.impressions ? (adSet.inline_link_clicks / adSet.impressions) : 0; // 各広告セットのCTRを計算
+      const adSetCtr = adSet.impressions ? (adSet.inline_link_clicks / adSet.impressions) : 0; // CTRを計算
       const adSetRow = [
-        `=IF($B$2="", "", ${getColumnLetter(colIndex + 1)}${existingRow}*$B$2)`,
-        adSet.spend,
-        adSet.impressions,
-        adSet.inline_link_clicks,
-        adSetCtr,
-        adSet.cost_per_unique_inline_link_click,
-        adSet.conversions,
+        `=IF(ISNUMBER($B$2), ${getColumnLetter(colIndex + 1)}${existingRow}*$B$2, "")`, // Cost Gross
+        adSet.spend, // Cost Net
+        adSet.impressions, // IMP
+        adSet.inline_link_clicks, // Clicks
+        adSetCtr, // CTR
+        multiplyMarginRate(adSet.cost_per_unique_inline_link_click), // CPC
+        adSet.conversions, // 媒体CV
         adSet.inline_link_clicks ? adSet.conversions / adSet.inline_link_clicks : 0, // 媒体CVR
-        adSet.conversions ? adSet.spend / adSet.conversions : 0, // 媒体CPA
+        adSet.conversions ? multiplyMarginRate(adSet.spend / adSet.conversions) : 0, // 媒体CPA
         0, // 実CV
         0, // 実CVR
         0  // 実CPA
@@ -1216,4 +1216,14 @@ function getColumnLetter(columnNumber) {
     columnNumber = Math.floor((columnNumber - 1) / 26);
   }
   return columnLetter;
+}
+
+// 数値をB2にマージン率があれば掛けるスプレッドシート関数にする関数
+function multiplyMarginRate(number) {
+
+  // numberがない場合は"-"を返す
+  if (!number) {
+    return "-";
+  }
+  return `=IF(ISNUMBER($B$2), ${number}*$B$2, ${number})`;
 }
