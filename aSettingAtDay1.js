@@ -78,13 +78,22 @@ function addTrigger() {
     ScriptApp.newTrigger('refreshAccessToken')
         .timeBased()
         .onMonthDay(1)
-        .atHour(5)
+        .atHour(3)
         .create();
 
     Logger.log('1か月ごとにrefreshAccessToken()を実行するトリガーを追加しました');
 
-    // 毎日午前5時にfacebook_getAdSetsForYesterday()を実行するトリガーを追加
-    ScriptApp.newTrigger('facebook_getAdSetsForYesterday')
+    // 毎日午前4時台に先月の運用レポートを最新化するトリガーを追加
+    ScriptApp.newTrigger('updateOperationReportForLastMonth')
+        .timeBased()
+        .everyDays(1)
+        .atHour(4)
+        .create();
+    
+
+
+    // 毎日午前5時台に今月の運用レポートを最新化するトリガーを追加
+    ScriptApp.newTrigger('updateOperationReportForThisMonth')
         .timeBased()
         .everyDays(1)
         .atHour(5)
