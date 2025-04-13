@@ -45,7 +45,7 @@ function facebook_getAdSets(daySince, dayUntil) {
   var adSetsCount = getAdSetsAndWriteSheet(sheetName, endpoint, fields, daySince, dayUntil);
 
   // 運用レポートに追記
-  makeOperationReport();
+  makeOperationReport('運用レポート');
 
   // メッセージを表示
   console.log(sheetName + "情報 取得完了");
@@ -339,11 +339,8 @@ function getAdSetsData(fields, daySince, dayUntil) {
   const responseData = JSON.parse(response.getContentText());
   const adSetsData = responseData.data || [];
 
-  // spendが0のデータを除外
-  const filteredAdSetsData = adSetsData.filter(adSet => adSet.spend > 0);
-
-  console.log(`getAdSetsData 取得した広告セットデータ件数: ${filteredAdSetsData.length}`);
-  return filteredAdSetsData;
+  console.log(`getAdSetsData 取得した広告セットデータ件数: ${adSetsData.length}`);
+  return adSetsData;
 }
 
 // 前日の広告セット情報を取得する関数（定期実行用）
@@ -365,10 +362,162 @@ function facebook_getAdSetsForYesterday() {
 
   // facebook_writeFacebookAdsDataToSheet(sheetName, endpoint, fields, daySince, dayUntil);
   // 運用レポートに広告セットシートのデータを整形して書き込む
-  makeOperationReport();
+  makeOperationReport('運用レポート');
 
   // メッセージを表示
   console.log(`${writtenAdSetsCount}件の${sheetName}情報を取得しました`);
+}
+
+// 今月の運用レポートを更新する関数（定期実行用）
+function updateOperationReportForThisMonth() {
+  console.log("updateOperationReportForThisMonth()");
+  const today = new Date();
+  const year = today.getFullYear(); // 年を取得
+  const month = today.getMonth() + 1; // 月を取得（0から始まるため+1する）
+  updateOperationReport(year, month);
+}
+
+// 先月の運用レポートを更新する関数（定期実行用）
+function updateOperationReportForLastMonth() {
+  console.log("updateOperationReportForLastMonth()");
+  const today = new Date();
+  const aMonthAgo = new Date(today.getFullYear(), today.getMonth() - 1, 1); // 先月の初日を取得
+  const year = aMonthAgo.getFullYear(); // 年を取得
+  const month = aMonthAgo.getMonth() + 1; // 月を取得（0から始まるため+1する）
+  updateOperationReport(year, month);
+}
+
+
+// 指定された月のデータを更新する関数
+// 引数：月（1~12）
+// 処理：(1)シートを用意 (2)広告セット名を取得 (3)各日のデータを更新
+function updateOperationReport(year, month) {
+  console.log(`updateOperationReport(${year}, ${month})`);
+
+  // 引数が渡されていなければロギングして終了
+  if (!year || !month) {
+    console.log('月が指定されていません。1~12の範囲で指定してください。');
+    return;
+  }
+
+  // (1)シートを用意
+  // スプレッドシートのシート「運用レポート(○月)」を取得して、存在しなければ作成
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  var operationReportSheetName = `運用レポート(${year}年${month}月)`;
+  var operationReportSheet = spreadsheet.getSheetByName(operationReportSheetName);
+
+  if (!operationReportSheet) {
+    // シートが存在しない場合は「【テンプレート】運用レポート」をコピーして「運用レポート(○月)」を作成
+    var templateSheet = spreadsheet.getSheetByName('【テンプレート】運用レポート');
+    if (!templateSheet) {
+      console.log('テンプレートシートが見つかりません。');
+      // シートを新規作成
+      operationReportSheet = spreadsheet.insertSheet(operationReportSheetName);
+    } else {
+      // テンプレートシートをコピーして新しいシートを作成
+      operationReportSheet = templateSheet.copyTo(spreadsheet).setName(operationReportSheetName);
+    }
+  }
+
+  operationReportSheet.activate();
+
+  // (2)広告セット名を取得
+  // 指定された月の初日と末日の日付を取得
+  const monthStartAndEndDate = getMonthStartAndEndDate(year, month);
+  const startDate = monthStartAndEndDate.start; // 月初日
+  const endDate = monthStartAndEndDate.end; // 月末日
+
+  adSetNames = getAdSetNames(startDate, endDate);
+
+  // 運用レポートのシートに広告セット名を記入
+  const tableTopRow = 10; // 表のタイトル（商材名）の行番号
+  const adSetWidth = 12; // 広告セット1つ分の列数
+  let startColumn = 15; // 広告セットデータを記入しはじめる列番号
+
+  adSetNames.forEach(adSetName => {
+    // 11行目に広告セット名を記入し、adSetWidthの幅でセルを結合
+    const adSetNameRange = operationReportSheet.getRange(tableTopRow + 1, startColumn, 1, adSetWidth);
+    adSetNameRange.merge();
+    adSetNameRange.setValue(adSetName);
+    adSetNameRange.setBackground('#ADD8E6'); // 背景色を水色に設定
+
+    // 12行目にC12からN12の列名をコピー
+    const headerRange = operationReportSheet.getRange(tableTopRow + 2, 3, 1, adSetWidth);
+    headerRange.copyTo(operationReportSheet.getRange(tableTopRow + 2, startColumn, 1, adSetWidth));
+
+    // 次の広告セットの列に移動
+    startColumn += adSetWidth;
+  });
+
+
+  // (3)各日のデータを更新
+  const getDataDateObj = new Date(startDate);
+  const endDateObj = new Date(endDate);
+  // startDateObjからendDateObjまでの日付を1日ずつ進めて、広告セットのデータを取得
+  while (getDataDateObj <= endDateObj) {
+    const formattedDate = Utilities.formatDate(getDataDateObj, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+    console.log(`運用レポート更新対象の日付: ${formattedDate}`);
+
+    // 広告セット情報を取得
+    const fields = "date_start,date_stop,adset_name,impressions,inline_link_clicks,inline_link_click_ctr,cost_per_unique_inline_link_click,spend,actions";
+    getAdSetsAndWriteSheet("広告セット", "adsets", fields, formattedDate, formattedDate);
+
+    // 運用レポートに広告セットシートのデータを整形して書き込む
+    makeOperationReport(operationReportSheetName);
+
+    // 次の日に進む
+    getDataDateObj.setDate(getDataDateObj.getDate() + 1);
+  }
+
+  // 運用レポートを更新した月をロギング
+  console.log(`運用レポートを更新した月: ${month}`);
+}
+
+// 指定された月の初日と末日の日付をJSON形式で取得する関数
+function getMonthStartAndEndDate(year, month) {
+  console.log(`getMonthStartAndEndDate(${year}, ${month})`);
+
+  const today = new Date();
+
+  // 指定された月の開始日と終了日を計算
+  const startDate = new Date(year, month - 1, 1);
+  const endDate = new Date(year, month, 0);
+
+  // 終了日が今日より後の日付であれば、今日の日付に修正
+  if (endDate > today) {
+    endDate.setDate(today.getDate());
+  }
+
+  // JSON形式で返す
+  return {
+    start: formatDate(startDate),
+    end: formatDate(endDate)
+  };
+}
+
+// 指定された日付(Date型)をyyyy-MM-dd形式の文字列にして返す関数
+function formatDate(date) {
+  console.log(`formatDate(${date})`);
+  return Utilities.formatDate(date, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+}
+
+
+// 指定された期間の広告セット名のリストを取得する関数
+// 引数：期間開始日, 期間終了日
+function getAdSetNames(startDate, endDate) {
+  console.log(`getAdSetNames(${startDate}, ${endDate})`);
+
+  const fields = "adset_name";
+
+  // 指定された月のデータを取得
+  console.log(`指定された月の広告セット名のリストを取得: ${startDate} ~ ${endDate}`);
+  const adSetsData = getAdSetsData(fields, startDate, endDate);
+
+  // 広告セット名を辞書順にソート
+  const adSetNames = [...new Set(adSetsData.map(adSet => adSet.adset_name))].sort();
+
+  console.log(`取得した広告セット名: ${adSetNames.join(", ")}`);
+  return adSetNames;
 }
 
 // 広告情報を取得する関数
@@ -575,25 +724,24 @@ function makeCreativeReport() {
 }
 
 // 運用レポートに広告セットシートのデータを整形して書き込む関数
-function makeOperationReport() {
-  console.log("makeOperationReport()");
+function makeOperationReport(sheetName) {
+  console.log(`makeOperationReport(${sheetName})`);
 
   var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   var spreadsheetId = spreadsheet.getId();
   console.log(`Spreadsheet ID: ${spreadsheetId}`);
 
+  // 指定されたシートを取得
+  var operationReportSheet = spreadsheet.getSheetByName(sheetName);
+  if (!operationReportSheet) {
+    console.log(`makeOperationReportで${sheetName}シートが見つかりません。`);
+    return;
+  }
+
   // 広告セットシートを取得
   var adSetSheet = spreadsheet.getSheetByName('広告セット');
   if (!adSetSheet) {
     console.log('広告セットシートが見つかりません。');
-    return;
-  }
-
-  // 運用レポートシートを取得
-  var operationReportSheetName = '運用レポート';
-  var operationReportSheet = spreadsheet.getSheetByName(operationReportSheetName);
-  if (!operationReportSheet) {
-    console.log('運用レポートシートが見つかりません。');
     return;
   }
 
@@ -609,7 +757,10 @@ function makeOperationReport() {
   noDataDate = noDataDate ? Utilities.formatDate(noDataDate, Session.getScriptTimeZone(), 'yyyy-MM-dd') : '';
   const adSetMap = {};
 
-  // 広告セットの情報を合算
+  // 運用レポートシートの11行目（広告セット名が記入されている行）を取得
+  const adSetNamesRow = operationReportSheet.getRange(tableTopRow + 1, 3, 1, operationReportSheet.getLastColumn() - 2).getValues()[0];
+
+  // 広告セットごとのデータを記入
   adSetData.forEach(row => {
     const [date_start, date_stop, adset_name, impressions, inline_link_clicks, inline_link_click_ctr, cost_per_unique_inline_link_click, spend, conversions] = row;
     if (!adSetMap[adset_name]) {
@@ -667,7 +818,7 @@ function makeOperationReport() {
     0, // 実CV
     0, // 実CVR
     0  // 実CPA
-  ];
+    ];
 
   // 運用レポートシートのデータを取得
   const operationReportData = operationReportSheet.getDataRange().getValues();
@@ -682,8 +833,9 @@ function makeOperationReport() {
     }
     Logger.log(`formattedDate: ${formattedDate}, dateStop: ${dateStop}`);
     if (formattedDate === dateStop) {
-      console.log(`Date ${dateStop} already exists in the report. Skipping.`);
-      return; // 日付が既に存在する場合は処理をスキップ
+    console.log(`Date ${dateStop} already exists in the report. Updating the row.`);
+    existingRow = i + 1; // 該当する行を特定
+    break; // ループを抜ける
     }
   }
 
@@ -698,12 +850,15 @@ function makeOperationReport() {
     if (existingRow === -1) {
       existingRow = operationReportData.length + 1;
     }
+    operationReportSheet.insertRowBefore(existingRow);
+} else {
+  // 既存の行を更新
+  console.log(`Updating existing row: ${existingRow}`);
   }
 
-  operationReportSheet.insertRowBefore(existingRow);
 
   if (adSetData.length === 0) {
-    // 広告セットシートのデータが0行の場合、最終行の次に1列挿入してB列に日付を記入
+  // 広告セットシートのデータが0行の場合、日付のみ記入
     if (noDataDate) {
       const dateCell = operationReportSheet.getRange(existingRow, 2);
       dateCell.setValue(noDataDate);
@@ -804,7 +959,7 @@ function makeOperationReport() {
   }
 
   // データをB列の値の昇順にソート
-  const startSortRow =  tableTopRow + 3; // 今回書き込まれた行の開始位置
+  const startSortRow = tableTopRow + 3; // 今回書き込まれた行の開始位置
 
   const rangeToSort = operationReportSheet.getRange(
     startSortRow, 2, // ソート開始行とB列
@@ -819,7 +974,7 @@ function makeOperationReport() {
   operationReportSheet.activate();
 
   // メッセージを表示
-  console.log(operationReportSheetName + "に広告セット情報を追記完了");
+  console.log(sheetName + "に広告セット情報を追記完了");
 }
 
 // スプレッドシートからアクセストークンを取得する関数
