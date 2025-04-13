@@ -40,6 +40,9 @@ function addOriginalMenu() {
         .addSeparator()
         .addItem('CRTレポート再作成', 'makeCreativeReport')
         .addItem('APIトークン更新', 'refreshAccessToken')
+        .addSeparator()
+        .addItem('運用レポート更新(先月)', 'updateOperationReportForLastMonth')
+        .addItem('運用レポート更新(今月)', 'updateOperationReportForThisMonth')
         .addToUi();
 
         // .addItem('', '') // メニュー追加
