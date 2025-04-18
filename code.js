@@ -752,32 +752,31 @@ function makeOperationReport(sheetName) {
   // シート情報の読み込み
   const lastRow = adSetSheet.getLastRow();
   const lastColumn = adSetSheet.getLastColumn();
+  const headers = adSetSheet.getRange(1, 1, 1, lastColumn).getValues()[0];
   const adSetData = lastRow > 1 ? adSetSheet.getRange(2, 1, lastRow - 1, lastColumn).getValues() : [];
-  let noDataDate = lastRow === 1 ? adSetSheet.getRange(1, 3).getValue() : '';
-  noDataDate = noDataDate ? Utilities.formatDate(noDataDate, Session.getScriptTimeZone(), 'yyyy-MM-dd') : '';
+  let noDataDate = lastRow <= 1 ? adSetSheet.getRange(1, 3).getValue() : '';
+  // 広告セットのデータがない場合
+  if (noDataDate && noDataDate !== '') {
+    noDataDate = Utilities.formatDate(noDataDate, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+    dateStop = noDataDate; // 日付を設定
+  }
+
+  // 広告セットごとのデータを取得
   const adSetMap = {};
-
-  // 運用レポートシートの11行目（広告セット名が記入されている行）を取得
-  const adSetNamesRow = operationReportSheet.getRange(tableTopRow + 1, 3, 1, operationReportSheet.getLastColumn() - 2).getValues()[0];
-
-  // 広告セットごとのデータを記入
   adSetData.forEach(row => {
-    const [date_start, date_stop, adset_name, impressions, inline_link_clicks, inline_link_click_ctr, cost_per_unique_inline_link_click, spend, conversions] = row;
+    const adSet = {};
+    headers.forEach((header, index) => {
+      adSet[header] = row[index]; // 1行目の項目名をキーとして値を格納
+    });
+
+    const adset_name = adSet['adset_name']; // 広告セット名を取得
+
+    // adSetに不足している項目があれば追加
+    addMissingFieldsToAdSet(adSet)
+
     if (!adSetMap[adset_name]) {
-      adSetMap[adset_name] = {
-        impressions: 0,
-        inline_link_clicks: 0,
-        cost_per_unique_inline_link_click: 0,
-        spend: 0,
-        conversions: 0,
-        date_stop: Utilities.formatDate(date_stop, Session.getScriptTimeZone(), 'yyyy-MM-dd')
-      };
+      adSetMap[adset_name] = adSet;
     }
-    adSetMap[adset_name].impressions += parseFloat(impressions) || 0;
-    adSetMap[adset_name].inline_link_clicks += parseFloat(inline_link_clicks) || 0;
-    adSetMap[adset_name].cost_per_unique_inline_link_click += parseFloat(cost_per_unique_inline_link_click) || 0;
-    adSetMap[adset_name].spend += parseFloat(spend) || 0;
-    adSetMap[adset_name].conversions += parseFloat(conversions) || 0;
   });
 
   // 合計値を計算
@@ -791,18 +790,20 @@ function makeOperationReport(sheetName) {
 
   for (const adset_name in adSetMap) {
     const adSet = adSetMap[adset_name];
-    totalImpressions += adSet.impressions;
-    totalClicks += adSet.inline_link_clicks;
-    totalSpend += adSet.spend;
-    totalConversions += adSet.conversions;
+    totalImpressions += parseFloat(adSet.impressions) || 0;
+    totalClicks += parseFloat(adSet.inline_link_clicks) || 0;
+    totalSpend += parseFloat(adSet.spend) || 0;
+    totalConversions += parseFloat(adSet.conversions) || 0;
     if (!dateStop) {
       dateStop = adSet.date_stop;
     }
   }
 
   // 全広告セットのCTR・CPCを計算
-  totalCtr = totalImpressions ? (totalClicks / totalImpressions) : 0;
-  totalCpc = totalSpend ? (totalSpend / totalClicks) : 0;
+  totalCtr = (totalImpressions && totalImpressions > 0)
+    ? (totalClicks / totalImpressions) : 0;
+  totalCpc = (totalClicks && totalClicks > 0)
+    ? (totalSpend / totalClicks) : 0;
 
   const totalRow = [
     dateStop,
@@ -813,8 +814,10 @@ function makeOperationReport(sheetName) {
     totalCtr,
     multiplyMarginRate(totalCpc),
     totalConversions,
-    totalClicks ? totalConversions / totalClicks : 0, // 媒体CVR
-    totalConversions ? multiplyMarginRate(totalSpend / totalConversions) : 0, // 媒体CPA
+    (totalClicks && totalClicks > 0)
+      ? totalConversions / totalClicks : 0, // 媒体CVR
+    (totalConversions && totalConversions > 0)
+    ? multiplyMarginRate(totalSpend / totalConversions) : 0, // 媒体CPA
     0, // 実CV
     0, // 実CVR
     0  // 実CPA
@@ -822,20 +825,28 @@ function makeOperationReport(sheetName) {
 
   // 運用レポートシートのデータを取得
   const operationReportData = operationReportSheet.getDataRange().getValues();
+  const adSetNamesRow = operationReportSheet.getRange(tableTopRow + 1, 3, 1, operationReportSheet.getLastColumn() - 2).getValues()[0];
+
   let startRow = tableTopRow + 3;
 
   // 既存のdate_stopをチェック
   let existingRow = -1;
+  const formattedDateStop = Utilities.formatDate(new Date(dateStop), Session.getScriptTimeZone(), 'yyyy-MM-dd');
+
   for (let i = startRow - 1; i < operationReportData.length; i++) {
     const formattedDate = Utilities.formatDate(new Date(operationReportData[i][1]), Session.getScriptTimeZone(), 'yyyy-MM-dd');
+    Logger.log(`formattedDate: ${formattedDate}, formattedDateStop: ${formattedDateStop}`);
+
+    // フォーマット前が日付形式でない場合はスキップ
     if (formattedDate === '1970-01-01') {
       continue;
     }
-    Logger.log(`formattedDate: ${formattedDate}, dateStop: ${dateStop}`);
-    if (formattedDate === dateStop) {
-    console.log(`Date ${dateStop} already exists in the report. Updating the row.`);
-    existingRow = i + 1; // 該当する行を特定
-    break; // ループを抜ける
+
+    // すでに運用レポートに同じ日付が存在する場合はループを抜ける
+    if (formattedDate === formattedDateStop) {
+      console.log(`Date ${formattedDateStop} already exists in the report. Updating the row.`);
+      existingRow = i + 1; // 該当する行を特定
+      break; // ループを抜ける
     }
   }
 
@@ -851,13 +862,12 @@ function makeOperationReport(sheetName) {
       existingRow = operationReportData.length + 1;
     }
     operationReportSheet.insertRowBefore(existingRow);
-} else {
-  // 既存の行を更新
-  console.log(`Updating existing row: ${existingRow}`);
+  } else {
+    // 既存の行を更新
+    console.log(`Updating existing row: ${existingRow}`);
   }
 
-
-  if (adSetData.length === 0) {
+  if (noDataDate && noDataDate !== '') {
   // 広告セットシートのデータが0行の場合、日付のみ記入
     if (noDataDate) {
       const dateCell = operationReportSheet.getRange(existingRow, 2);
@@ -893,9 +903,14 @@ function makeOperationReport(sheetName) {
     // 広告セットごとの情報を追加
     let colIndex = 15; // O列から開始
     for (const adset_name in adSetMap) {
+
+      // 広告セット名をたよりにMapからデータを取り出す
       const adSet = adSetMap[adset_name];
+      console.log(`adSet: ${JSON.stringify(adSet)}`);
+
       const adSetCtr = adSet.impressions ? (adSet.inline_link_clicks / adSet.impressions) : 0; // CTRを計算
-      const adSetRow = [
+
+      let adSetRow = [
         `=IF(ISNUMBER($B$2), ${getColumnLetter(colIndex + 1)}${existingRow}*$B$2, "")`, // Cost Gross
         adSet.spend, // Cost Net
         adSet.impressions, // IMP
@@ -903,50 +918,56 @@ function makeOperationReport(sheetName) {
         adSetCtr, // CTR
         multiplyMarginRate(adSet.cost_per_unique_inline_link_click), // CPC
         adSet.conversions, // 媒体CV
-        adSet.inline_link_clicks ? adSet.conversions / adSet.inline_link_clicks : 0, // 媒体CVR
-        adSet.conversions ? multiplyMarginRate(adSet.spend / adSet.conversions) : 0, // 媒体CPA
+        (adSet.inline_link_clicks && adSet.inline_link_clicks > 0)
+          ? adSet.conversions / adSet.inline_link_clicks : 0, // 媒体CVR
+        (adSet.conversions && adSet.conversions > 0)
+          ? multiplyMarginRate(adSet.spend / adSet.conversions) : 0, // 媒体CPA
         0, // 実CV
         0, // 実CVR
         0  // 実CPA
       ];
 
       // 媒体CV、媒体CVR、媒体CPAに#NUM!が入る場合は0にする
-      for (let i = 7; i <= 9; i++) {
+      for (let i = 0; i < adSetRow.length; i++) {
         if (isNaN(adSetRow[i]) || !isFinite(adSetRow[i])) {
           adSetRow[i] = 0;
         }
       }
 
-      // 広告セット名をN11, Y11, AJ11などに設定
-      const adSetNameRange = operationReportSheet.getRange(tableTopRow + 1, colIndex, 1, adSetWidth);
-      adSetNameRange.setValue(adset_name);
-      adSetNameRange.setBackground('#ADD8E6'); // 水色背景
-      adSetNameRange.merge();
+      // adset_nameがadSetNamesRowに存在するか確認
+      let targetColIndex = adSetNamesRow.indexOf(adset_name) + 3; // 記入済みの広告セット名を検索
 
-      // タイトル行にあたるC12:M12を各広告セットのためにN12:X12, Y12:AI12, AJ12:AT12などにコピー
-      const headerRange = operationReportSheet.getRange(tableTopRow + 2, 3, 1, adSetWidth);
-      headerRange.copyTo(operationReportSheet.getRange(tableTopRow + 2, colIndex, 1, adSetWidth));
+      if (targetColIndex < 3) {
+        // 見つからない場合は右端の列に追記
+        targetColIndex = operationReportSheet.getLastColumn() + 1;
 
-      // 広告セットの値をN13:X13, Y13:AI13, AJ13:AT13などに設定
-      operationReportSheet.getRange(existingRow, colIndex, 1, adSetRow.length).setValues([adSetRow]);
+        // 広告セット名を記入
+        const adSetNameRange = operationReportSheet.getRange(tableTopRow + 1, targetColIndex, 1, adSetWidth);
+        adSetNameRange.setValue(adset_name);
+        adSetNameRange.setBackground('#ADD8E6'); // 水色背景
+        adSetNameRange.merge();
+
+        // タイトル行にあたるC12:M12をコピー
+          const headerRange = operationReportSheet.getRange(tableTopRow + 2, 3, 1, adSetWidth);
+        headerRange.copyTo(operationReportSheet.getRange(tableTopRow + 2, targetColIndex, 1, adSetWidth));
+      }
+
+      // 該当する列にデータを記入
+      operationReportSheet.getRange(existingRow, targetColIndex, 1, adSetRow.length).setValues([adSetRow]);
 
       // 各項目の形式を指定
-      operationReportSheet.getRange(existingRow, colIndex).setNumberFormat('"¥"#,##0'); // spend
-      operationReportSheet.getRange(existingRow, colIndex + 1).setNumberFormat('"¥"#,##0'); // spend
-      operationReportSheet.getRange(existingRow, colIndex + 2).setNumberFormat('#,##0'); // impressions
-      operationReportSheet.getRange(existingRow, colIndex + 3).setNumberFormat('#,##0'); // inline_link_clicks
-      operationReportSheet.getRange(existingRow, colIndex + 4).setNumberFormat('0.00%'); // inline_link_click_ctr
-      operationReportSheet.getRange(existingRow, colIndex + 5).setNumberFormat('"¥"#,##0'); // cost_per_unique_inline_link_click
-      operationReportSheet.getRange(existingRow, colIndex + 6).setNumberFormat('#,##0'); // conversions
-      operationReportSheet.getRange(existingRow, colIndex + 7).setNumberFormat('0.00%'); // cvr
-      operationReportSheet.getRange(existingRow, colIndex + 8).setNumberFormat('"¥"#,##0'); // cpa
-      operationReportSheet.getRange(existingRow, colIndex + 9).setNumberFormat('#,##0'); // 実CV
-      operationReportSheet.getRange(existingRow, colIndex + 10).setNumberFormat('0.00%'); // 実CVR
-      operationReportSheet.getRange(existingRow, colIndex + 11).setNumberFormat('"¥"#,##0'); // 実CPA
-
-      // 罫線を引く
-      const rangeToBorder = operationReportSheet.getRange(tableTopRow + 1, 2, existingRow - tableTopRow, colIndex + adSetWidth - 2);
-      rangeToBorder.setBorder(true, true, true, true, true, true);
+      operationReportSheet.getRange(existingRow, targetColIndex).setNumberFormat('"¥"#,##0'); // cost gross
+      operationReportSheet.getRange(existingRow, targetColIndex + 1).setNumberFormat('"¥"#,##0'); // cost net
+      operationReportSheet.getRange(existingRow, targetColIndex + 2).setNumberFormat('#,##0'); // impressions
+      operationReportSheet.getRange(existingRow, targetColIndex + 3).setNumberFormat('#,##0'); // inline_link_clicks
+      operationReportSheet.getRange(existingRow, targetColIndex + 4).setNumberFormat('0.00%'); // inline_link_click_ctr
+      operationReportSheet.getRange(existingRow, targetColIndex + 5).setNumberFormat('"¥"#,##0'); // cost_per_unique_inline_link_click
+      operationReportSheet.getRange(existingRow, targetColIndex + 6).setNumberFormat('#,##0'); // conversions
+      operationReportSheet.getRange(existingRow, targetColIndex + 7).setNumberFormat('0.00%'); // cvr
+      operationReportSheet.getRange(existingRow, targetColIndex + 8).setNumberFormat('"¥"#,##0'); // cpa
+      operationReportSheet.getRange(existingRow, targetColIndex + 9).setNumberFormat('#,##0'); // 実CV
+      operationReportSheet.getRange(existingRow, targetColIndex + 10).setNumberFormat('0.00%'); // 実CVR
+      operationReportSheet.getRange(existingRow, targetColIndex + 11).setNumberFormat('"¥"#,##0'); // 実CPA
 
       // 背景色を設定
       const lastRow = operationReportSheet.getLastRow() - 12;
@@ -969,6 +990,10 @@ function makeOperationReport(sheetName) {
 
   // ソート範囲を指定して行を移動
   rangeToSort.sort({ column: 2, ascending: true }); // B列（2列目）を昇順でソート
+
+  // 表全体に罫線を引く
+  rangeToSort.setBorder(true, true, true, true, true, true);
+  console.log(`罫線を引いたセル範囲：${rangeToSort.getA1Notation()}`);
 
   // シートを表示
   operationReportSheet.activate();
@@ -1381,4 +1406,23 @@ function multiplyMarginRate(number) {
     return "-";
   }
   return `=IF(ISNUMBER($B$2), ${number}*$B$2, ${number})`;
+}
+
+// adSetに不足している項目を追加する関数
+function addMissingFieldsToAdSet(adSet) {
+  const headers = [
+    'spend',
+    'impressions',
+    'inline_link_clicks',
+    'inline_link_click_ctr',
+    'cost_per_unique_inline_link_click',
+    'conversions',
+    'cvr',
+    'cpa'
+  ];
+  headers.forEach(header => {
+    if (!(header in adSet)) {
+      adSet[header] = 0; // 不足している項目を初期値0で追加
+    }
+  });
 }
