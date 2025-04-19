@@ -434,20 +434,21 @@ function updateOperationReport(year, month) {
   const adSetWidth = 12; // 広告セット1つ分の列数
   let startColumn = 15; // 広告セットデータを記入しはじめる列番号
 
-  adSetNames.forEach(adSetName => {
-    // 11行目に広告セット名を記入し、adSetWidthの幅でセルを結合
-    const adSetNameRange = operationReportSheet.getRange(tableTopRow + 1, startColumn, 1, adSetWidth);
-    adSetNameRange.merge();
-    adSetNameRange.setValue(adSetName);
-    adSetNameRange.setBackground('#ADD8E6'); // 背景色を水色に設定
+  for (let i = 0; i < adSetNames.length; i++) {
+      const adSetName = adSetNames[i];
 
-    // 12行目にC12からN12の列名をコピー
-    const headerRange = operationReportSheet.getRange(tableTopRow + 2, 3, 1, adSetWidth);
-    headerRange.copyTo(operationReportSheet.getRange(tableTopRow + 2, startColumn, 1, adSetWidth));
+      // 11行目に広告セット名を記入し、adSetWidthの幅でセルを結合
+      const adSetNameRange = operationReportSheet.getRange(tableTopRow + 1, startColumn, 1, adSetWidth);
+      adSetNameRange.setValue(adSetName);
+      adSetNameRange.setBackground('#ADD8E6'); // 背景色を水色に設定
 
-    // 次の広告セットの列に移動
-    startColumn += adSetWidth;
-  });
+      // 12行目にC12からN12の列名をコピー
+      const headerRange = operationReportSheet.getRange(tableTopRow + 2, 3, 1, adSetWidth);
+      headerRange.copyTo(operationReportSheet.getRange(tableTopRow + 2, startColumn, 1, adSetWidth));
+
+      // 次の広告セットの列に移動
+      startColumn += adSetWidth;
+  }
 
 
   // (3)各日のデータを更新
