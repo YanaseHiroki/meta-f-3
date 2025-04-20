@@ -434,13 +434,20 @@ function updateOperationReport(year, month) {
   const adSetWidth = 12; // 広告セット1つ分の列数
   let startColumn = 15; // 広告セットデータを記入しはじめる列番号
 
+  // 広告セット名を記入する各セル範囲の背景色を変更して結合
+  for (let i = 0; i < adSetNames.length; i++) {
+    const eachAdSetNameRange = operationReportSheet.getRange(tableTopRow + 1, startColumn + (i * adSetWidth), 1, adSetWidth);
+    eachAdSetNameRange.setBackground('#ADD8E6');
+    eachAdSetNameRange.setFontColor('#000000');
+    eachAdSetNameRange.merge();
+  }
+
+
   for (let i = 0; i < adSetNames.length; i++) {
       const adSetName = adSetNames[i];
 
-      // 11行目に広告セット名を記入し、adSetWidthの幅でセルを結合
-      const adSetNameRange = operationReportSheet.getRange(tableTopRow + 1, startColumn, 1, adSetWidth);
-      adSetNameRange.setValue(adSetName);
-      adSetNameRange.setBackground('#ADD8E6'); // 背景色を水色に設定
+      // 11行目に広告セット名を記入し、背景色を水色に設定
+      operationReportSheet.getRange(tableTopRow + 1, startColumn).setValue(adSetName);
 
       // 12行目にC12からN12の列名をコピー
       const headerRange = operationReportSheet.getRange(tableTopRow + 2, 3, 1, adSetWidth);
