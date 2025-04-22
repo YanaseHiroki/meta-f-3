@@ -430,7 +430,9 @@ function updateOperationReport(year, month) {
   adSetNames = getAdSetNames(startDate, endDate);
 
   // 運用レポートのシートに広告セット名を記入
-  const tableTopRow = 10; // 表のタイトル（商材名）の行番号
+
+  const tableTopRow = getTableTopRow(operationReportSheet);  // tableTopRow を動的に取得
+  console.log(`tableTopRow: ${tableTopRow}`);
   const adSetWidth = 12; // 広告セット1つ分の列数
   let startColumn = 15; // 広告セットデータを記入しはじめる列番号
 
@@ -479,6 +481,21 @@ function updateOperationReport(year, month) {
 
   // 運用レポートを更新した月をロギング
   console.log(`運用レポートを更新した月: ${month}`);
+}
+
+// A列に「商材名」という値がある行を取得する関数
+function getTableTopRow(sheet) {
+  if (sheet.getLastRow() === 0) {
+    throw new Error("シートが空です。テンプレートを確認してください");
+  }
+  const range = sheet.getRange(1, 1, sheet.getLastRow(), 1); // A列全体を取得
+  const values = range.getValues();
+  for (let i = 0; i < values.length; i++) {
+    if (values[i][0] === "商材名") {
+      return i + 1; // 行番号は0ベースなので+1
+    }
+  }
+  throw new Error("A列に「商材名」が見つかりません。");
 }
 
 // 指定された月の初日と末日の日付をJSON形式で取得する関数
@@ -746,16 +763,16 @@ function makeOperationReport(sheetName) {
     return;
   }
 
+  // 表のタイトル（商材名）の行番号を動的に取得
+  const tableTopRow = getTableTopRow(operationReportSheet);
+  const adSetWidth = 12; // 広告セット1つ分の列数
+
   // 広告セットシートを取得
   var adSetSheet = spreadsheet.getSheetByName('広告セット');
   if (!adSetSheet) {
     console.log('広告セットシートが見つかりません。');
     return;
   }
-
-  // 表のタイトル（商材名）の行番号
-  const tableTopRow = 10;
-  const adSetWidth = 12; // 広告セット1つ分の列数
 
   // シート情報の読み込み
   const lastRow = adSetSheet.getLastRow();
@@ -992,9 +1009,12 @@ function makeOperationReport(sheetName) {
 
   const rangeToSort = operationReportSheet.getRange(
     startSortRow, 2, // ソート開始行とB列
-    existingRow - tableTopRow - 2, // ソートする行数
-    operationReportSheet.getLastColumn() - 1 // ソートする列数（B列以降）
+  existingRow - tableTopRow - 2, // ソートする行数
+  operationReportSheet.getLastColumn() - 1 // ソートする列数（B列以降）
   );
+
+  // rangeToSortをコンソール出力
+  console.log(`ソート対象の範囲：${rangeToSort.getA1Notation()}`);
 
   // ソート範囲を指定して行を移動
   rangeToSort.sort({ column: 2, ascending: true }); // B列（2列目）を昇順でソート
